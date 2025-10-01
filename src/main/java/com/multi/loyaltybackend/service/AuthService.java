@@ -24,6 +24,7 @@ public class AuthService {
 
     /**
      * Registers a new user in the system.
+     *
      * @param registerRequest DTO containing username, email, and password.
      */
     @Transactional
@@ -43,6 +44,7 @@ public class AuthService {
 
     /**
      * Creates a password reset token and sends it to the user's email.
+     *
      * @param email The email of the user requesting a password reset.
      */
     @Transactional
@@ -60,7 +62,8 @@ public class AuthService {
 
     /**
      * Resets the user's password if the provided token is valid.
-     * @param token The password reset token.
+     *
+     * @param token       The password reset token.
      * @param newPassword The new password to set.
      */
     @Transactional
@@ -80,7 +83,8 @@ public class AuthService {
 
     /**
      * Helper method to send the password reset email.
-     * @param to The recipient's email address.
+     *
+     * @param to    The recipient's email address.
      * @param token The password reset token.
      */
     private void sendPasswordResetEmail(String to, String token) {
