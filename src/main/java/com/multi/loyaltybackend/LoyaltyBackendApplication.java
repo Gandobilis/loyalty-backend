@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 @SpringBootApplication
 public class LoyaltyBackendApplication {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         SpringApplication.run(LoyaltyBackendApplication.class, args);
     }
 }

@@ -1,5 +1,5 @@
 # Stage 1: Build the application using Maven with JDK 25
-FROM maven:3.9-eclipse-temurin-25 AS builder
+FROM maven:3.9-eclipse-temurin-21 AS builder
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ COPY src ./src
 RUN mvn package -DskipTests
 
 # Stage 2: Create the final, lightweight runtime image using JRE 25
-FROM eclipse-temurin:25-jre-jammy
+FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
