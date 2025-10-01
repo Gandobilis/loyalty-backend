@@ -7,6 +7,9 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+
+import java.util.Map;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -20,7 +23,7 @@ import java.util.Objects;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User implements UserDetails {
+public class User implements UserDetails, OAuth2User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -61,6 +64,7 @@ public class User implements UserDetails {
 
     /**
      * If the Role enum implements GrantedAuthority, this becomes much simpler.
+     *
      * @return A collection containing the user's single role.
      */
     @Override
@@ -114,5 +118,20 @@ public class User implements UserDetails {
                 ", role=" + role +
                 ", enabled=" + enabled +
                 '}';
+    }
+
+    @Transient // This field does not need to be persisted
+    private Map<String, Object> attributes;
+
+    // --- OAuth2User implemented methods ---
+    @Override
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    @Override
+    public String getName() {
+        // The "sub" attribute is a common unique identifier from OAuth2 providers
+        return attributes != null ? (String) attributes.get("sub") : null;
     }
 }
