@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # The Backend Service (Your Spring Boot App)
+  backend:
+    build: . # Build the image from the Dockerfile in the current directory
+    container_name: loyalty-backend
+    ports:
+      - "8080:8080" # Map host port 8080 to container port 8080
+    env_file:
+      - ./.env # Load environment variables from the .env file
+    depends_on:
+      - postgres # Wait for the database to be ready before starting
+
+  # The Database Service
+  postgres:
+    image: postgres:15
+    container_name: loyalty-db
+    environment:
+      POSTGRES_USER: ${DB_USERNAME} # Use variables from the .env file
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-mydatabase} # Default to 'mydatabase' if not in .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # --- Frontend Service (Example Placeholder) ---
+  # frontend:
+  #   build:
+  #     context: ../path-to-your-frontend # Path to your frontend app's Dockerfile
+  #   container_name: loyalty-frontend
+  #   ports:
+  #     - "3000:3000" # Map host port 3000 to container port 3000
+  #   depends_on:
+  #     - backend
+
+volumes:
+  postgres_data:
