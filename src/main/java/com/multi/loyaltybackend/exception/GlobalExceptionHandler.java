@@ -1,8 +1,7 @@
 package com.multi.loyaltybackend.exception;
 
-import com.multi.loyaltybackend.dto.ApiResponze;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.multi.loyaltybackend.dto.ApiResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -13,42 +12,41 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Add a logger to record unexpected errors
-    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponze<Void>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponse<Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
+        ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-
-        ApiResponze<Void> response = ApiResponze.error("Validation Failed", errors);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        log.warn("Validation error: {}", errors);
+        ApiResponse<Object> apiResponse = ApiResponse.error(HttpStatus.BAD_REQUEST, "Validation Failed", errors);
+        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ApiResponze<Void>> handleUserAlreadyExists(UserAlreadyExistsException ex) {
-        ApiResponze<Void> response = ApiResponze.error(ex.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        log.warn("Resource not found: {}", ex.getMessage());
+        ApiResponse<Object> apiResponse = ApiResponse.error(HttpStatus.NOT_FOUND, ex.getMessage());
+        return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
     }
 
-    /**
-     * Catches all other exceptions that are not explicitly handled.
-     * This acts as a safety net to prevent exposing stack traces to the client.
-     */
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAccessDeniedException(org.springframework.security.access.AccessDeniedException ex) {
+        log.warn("Access denied: {}", ex.getMessage());
+        ApiResponse<Object> apiResponse = ApiResponse.error(HttpStatus.FORBIDDEN, "Access Denied: You do not have permission to perform this action.");
+        return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponze<Void>> handleGeneralException(Exception ex) {
-        // Log the exception for debugging purposes
-        logger.error("An unexpected error occurred: {}", ex.getMessage(), ex);
-
-        // Return a generic error message to the client for security
-        ApiResponze<Void> response = ApiResponze.error(ex.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<ApiResponse<Object>> handleAllUncaughtException(Exception ex) {
+        log.error("An unexpected error occurred", ex);
+        ApiResponse<Object> apiResponse = ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected internal server error occurred. Please try again later.");
+        return new ResponseEntity<>(apiResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
