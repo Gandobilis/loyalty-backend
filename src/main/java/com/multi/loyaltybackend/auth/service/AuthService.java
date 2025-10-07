@@ -1,30 +1,37 @@
 package com.multi.loyaltybackend.auth.service;
 
+import com.multi.loyaltybackend.auth.model.ERole;
+import com.multi.loyaltybackend.auth.model.Role;
 import com.multi.loyaltybackend.auth.model.User;
+import com.multi.loyaltybackend.auth.repository.RoleRepository;
 import com.multi.loyaltybackend.auth.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final TokenBlocklistService tokenBlocklistService;
+    private final TokenBlacklistService tokenBlacklistService;
     private final EmailService emailService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager, TokenBlocklistService tokenBlocklistService, EmailService emailService) {
+    public AuthService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager, TokenBlacklistService tokenBlacklistService, EmailService emailService) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
-        this.tokenBlocklistService = tokenBlocklistService;
+        this.tokenBlacklistService = tokenBlacklistService;
         this.emailService = emailService;
     }
 
@@ -36,6 +43,15 @@ public class AuthService {
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        Set<Role> roles = new HashSet<>();
+
+        Role userRole = roleRepository.findByName(ERole.ROLE_USER)
+                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+
+        roles.add(userRole);
+        user.setRoles(roles);
+
         return userRepository.save(user);
     }
 
@@ -48,7 +64,7 @@ public class AuthService {
     }
 
     public void logout(String token) {
-        tokenBlocklistService.blocklistToken(token);
+        tokenBlacklistService.blocklistToken(token);
     }
 
     public void initiatePasswordReset(String email) {

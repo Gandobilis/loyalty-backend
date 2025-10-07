@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Service
-public class TokenBlocklistService {
+public class TokenBlacklistService {
     // In a production environment, use a distributed cache like Redis
     private Set<String> blocklist = Collections.synchronizedSet(new HashSet<>());
 

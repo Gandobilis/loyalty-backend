@@ -1,7 +1,7 @@
 package com.multi.loyaltybackend.auth.config;
 
 import com.multi.loyaltybackend.auth.service.JwtService;
-import com.multi.loyaltybackend.auth.service.TokenBlocklistService;
+import com.multi.loyaltybackend.auth.service.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,12 +21,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-    private final TokenBlocklistService tokenBlocklistService;
+    private final TokenBlacklistService tokenBlacklistService;
 
-    public JwtAuthFilter(JwtService jwtService, UserDetailsService userDetailsService, TokenBlocklistService tokenBlocklistService) {
+    public JwtAuthFilter(JwtService jwtService, UserDetailsService userDetailsService, TokenBlacklistService tokenBlacklistService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
-        this.tokenBlocklistService = tokenBlocklistService;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @Override
@@ -43,7 +43,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         jwt = authHeader.substring(7);
 
         // Check if token is blocklisted
-        if (tokenBlocklistService.isTokenBlocklisted(jwt)) {
+        if (tokenBlacklistService.isTokenBlocklisted(jwt)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
