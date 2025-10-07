@@ -1,4 +1,4 @@
-package com.multi.loyaltybackend.auth;
+package com.multi.loyaltybackend.auth.controller;
 
 import com.multi.loyaltybackend.auth.dto.*;
 import com.multi.loyaltybackend.auth.model.User;
