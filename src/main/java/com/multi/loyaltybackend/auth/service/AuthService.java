@@ -17,15 +17,15 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final TokenBlocklistService tokenBlocklistService;
-    // Inject an EmailService mock for a real application
-    // private final EmailService emailService;
+    private final EmailService emailService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager, TokenBlocklistService tokenBlocklistService) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager, TokenBlocklistService tokenBlocklistService, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.tokenBlocklistService = tokenBlocklistService;
+        this.emailService = emailService;
     }
 
     public User register(User request) {
@@ -59,8 +59,7 @@ public class AuthService {
         user.setPasswordResetToken(token);
         userRepository.save(user);
 
-        // In a real app, you would send an email here
-        // emailService.sendPasswordResetEmail(email, token);
+        emailService.sendPasswordResetEmail(email, token);
         System.out.println("Password reset token for " + email + ": " + token);
     }
 
