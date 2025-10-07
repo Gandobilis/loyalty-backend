@@ -42,7 +42,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         jwt = authHeader.substring(7);
 
-        // Check if token is blocklisted
         if (tokenBlacklistService.isTokenBlocklisted(jwt)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;

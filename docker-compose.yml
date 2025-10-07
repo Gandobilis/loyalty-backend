@@ -7,7 +7,10 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      postgres: # <--- MODIFY THIS SECTION
+      # The backend will now wait for both services to be healthy before starting.
+      postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   postgres:
@@ -21,11 +24,27 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck: # <--- ADD THIS ENTIRE SECTION
+    healthcheck:
       test: ["CMD-SHELL", "pg_isready -U myuser -d mydatabase"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: loyalty-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      # This command checks if the Redis server is responsive.
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# --- VOLUMES UPDATED ---
 volumes:
   postgres_data:
+  redis_data:

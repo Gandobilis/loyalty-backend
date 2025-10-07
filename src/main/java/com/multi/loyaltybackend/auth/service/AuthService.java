@@ -64,7 +64,7 @@ public class AuthService {
     }
 
     public void logout(String token) {
-        tokenBlacklistService.blocklistToken(token);
+        tokenBlacklistService.addToBlocklist(token);
     }
 
     public void initiatePasswordReset(String email) {
