@@ -1,12 +1,13 @@
 package com.multi.loyaltybackend.profile.dto;
 
 import com.multi.loyaltybackend.auth.model.Role;
+import com.multi.loyaltybackend.event.dto.EventDTO;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -24,4 +25,5 @@ public class ProfileResponseDTO {
     private Integer workingHours;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private List<EventDTO> registrations;
 }

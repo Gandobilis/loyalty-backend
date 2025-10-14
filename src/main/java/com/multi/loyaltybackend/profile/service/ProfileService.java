@@ -1,5 +1,6 @@
 package com.multi.loyaltybackend.profile.service;
 
+import com.multi.loyaltybackend.event.dto.EventDTO;
 import com.multi.loyaltybackend.file.ImageStorageService;
 import com.multi.loyaltybackend.profile.dto.ProfileResponseDTO;
 import com.multi.loyaltybackend.auth.model.User;
@@ -9,6 +10,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -53,11 +56,7 @@ public class ProfileService {
         String fileName = user.getFileName();
 
         if (fileName != null && !fileName.isEmpty()) {
-            try {
-                fileStorageService.deleteFile(fileName);
-            } catch (RuntimeException e) {
-                System.err.println("Warning: Failed to delete file: " + fileName);
-            }
+            fileStorageService.deleteFile(fileName);
             user.setFileName(null);
             userRepository.save(user);
         }
@@ -70,16 +69,13 @@ public class ProfileService {
 
     private void deleteOldFileIfNeeded(String oldFile, String newFile) {
         if (oldFile != null && !oldFile.equals(newFile)) {
-            try {
-                fileStorageService.deleteFile(oldFile);
-            } catch (Exception e) {
-                System.err.println("Failed to delete old file: " + oldFile);
-            }
+            fileStorageService.deleteFile(oldFile);
         }
     }
 
     private ProfileResponseDTO mapToProfileResponseDTO(User user) {
         return ProfileResponseDTO.builder()
+                .registrations(user.getRegistrations().stream().map(event -> new EventDTO(event.getEvent().getId(), event.getEvent().getTitle(), event.getEvent().getPoints(), event.getEvent().getDateTime())).collect(Collectors.toList()))
                 .id(user.getId())
                 .email(user.getEmail())
                 .fullName(user.getFullName())

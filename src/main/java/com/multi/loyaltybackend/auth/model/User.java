@@ -1,5 +1,6 @@
 package com.multi.loyaltybackend.auth.model;
 
+import com.multi.loyaltybackend.registration.model.Registration;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -11,6 +12,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -119,6 +121,20 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Registration> registrations = new ArrayList<>();
 
     public void incrementPoints(int points) {
         if (points < 0) {
