@@ -1,6 +1,6 @@
 package com.multi.loyaltybackend.profile.service;
 
-import com.multi.loyaltybackend.file.FileStorageService;
+import com.multi.loyaltybackend.file.ImageStorageService;
 import com.multi.loyaltybackend.profile.dto.ProfileResponseDTO;
 import com.multi.loyaltybackend.auth.model.User;
 import com.multi.loyaltybackend.auth.repository.UserRepository;
@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ProfileService {
 
     private final UserRepository userRepository;
-    private final FileStorageService fileStorageService;
+    private final ImageStorageService fileStorageService;
 
     public ProfileResponseDTO getProfile(String email) {
         User user = findUserByEmail(email);

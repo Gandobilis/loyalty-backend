@@ -11,11 +11,11 @@ import java.nio.file.*;
 import java.util.UUID;
 
 @Service
-public class FileStorageService {
+public class ImageStorageService {
 
-    private final Path storageDir = Paths.get("uploads").toAbsolutePath().normalize();
+    private final Path storageDir = Paths.get("images");
 
-    public FileStorageService() {
+    public ImageStorageService() {
         try {
             Files.createDirectories(storageDir);
         } catch (IOException e) {
@@ -41,7 +41,7 @@ public class FileStorageService {
         try {
             Resource resource = new UrlResource(path.toUri());
             if (resource.exists() && resource.isReadable()) {
-                return path.toString();
+                return "http://localhost:8080/api/" + path;
             } else {
                 throw new RuntimeException("File not found or not readable");
             }
