@@ -17,16 +17,13 @@ public class EmailService {
     }
 
     public void sendPasswordResetEmail(String to, String token) {
-        // Construct the password reset URL
         String resetUrl = frontendUrl + "/reset-password?token=" + token;
 
-        // Create the email message
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);
         message.setSubject("Password Reset Request");
         message.setText("To reset your password, click the link below:\n" + resetUrl);
 
-        // Send the email
         mailSender.send(message);
     }
 }

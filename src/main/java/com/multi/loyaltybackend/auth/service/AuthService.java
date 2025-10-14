@@ -30,12 +30,8 @@ public class AuthService {
     }
 
     public void register(User request) {
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("User with this email already exists.");
-        }
-
-        if (request.getRole() == null) {
-            request.setRole(Role.USER);
         }
 
         User user = User.builder()
@@ -69,7 +65,6 @@ public class AuthService {
         userRepository.save(user);
 
         emailService.sendPasswordResetEmail(email, token);
-        System.out.println("Password reset token for " + email + ": " + token);
     }
 
     public void resetPassword(String token, String newPassword) {
@@ -77,7 +72,7 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("Invalid password reset token."));
 
         user.setPassword(passwordEncoder.encode(newPassword));
-        user.setPasswordResetToken(null); // Invalidate the token
+        user.setPasswordResetToken(null);
         userRepository.save(user);
     }
 }
