@@ -3,8 +3,7 @@ package com.multi.loyaltybackend.profile.dto;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

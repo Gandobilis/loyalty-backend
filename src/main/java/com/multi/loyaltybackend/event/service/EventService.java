@@ -5,7 +5,9 @@ import com.multi.loyaltybackend.event.dto.EventRequestDTO;
 import com.multi.loyaltybackend.event.dto.EventResponseDTO;
 import com.multi.loyaltybackend.event.model.Event;
 import com.multi.loyaltybackend.event.repository.EventRepository; // Hypothetical
+import com.multi.loyaltybackend.event.repository.EventSpecifications;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,8 +42,17 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public List<EventResponseDTO> getAllEvents(String category, LocalDate startDate, LocalDate endDate) {
+        Specification<Event> spec = Specification.where(null);
 
-        List<Event> events = eventRepository.findByCategoryAndDateTimeBetween(category, startDate, endDate);
+        if (category != null) {
+            spec = spec.and(EventSpecifications.hasCategory(category));
+        }
+
+        if (startDate != null && endDate != null) {
+            spec = spec.and(EventSpecifications.isBetweenDates(startDate, endDate));
+        }
+
+        List<Event> events = eventRepository.findAll(spec);
 
         return events.stream()
                 .map(this::mapEntityToResponse)
