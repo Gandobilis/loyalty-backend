@@ -1,5 +1,6 @@
 package com.multi.loyaltybackend.auth.service;
 
+import com.multi.loyaltybackend.auth.model.Role;
 import com.multi.loyaltybackend.auth.model.User;
 import com.multi.loyaltybackend.auth.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,6 +33,11 @@ public class AuthService {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new IllegalArgumentException("User with this email already exists.");
         }
+
+        if (request.getRole() == null) {
+            request.setRole(Role.USER);
+        }
+
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))

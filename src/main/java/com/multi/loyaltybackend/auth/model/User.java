@@ -46,9 +46,7 @@ public class User implements UserDetails {
 
     private String passwordResetToken;
 
-    @Size(max = 500, message = "Image URL cannot exceed 500 characters")
-    @Column(length = 500)
-    private String imageUrl;
+    private String fileName;
 
     @Builder.Default
     @Min(value = 0, message = "Total points cannot be negative")
@@ -92,7 +90,6 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    // UserDetails implementation - Not modified
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
