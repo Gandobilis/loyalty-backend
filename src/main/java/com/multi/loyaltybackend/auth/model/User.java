@@ -41,6 +41,12 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(length = 50)
+    private String authProvider; // "local", "google", "github", etc.
+
+    @Column(length = 255)
+    private String providerId;
+
     @NotBlank(message = "Password is required")
     @Size(min = 8, max = 255, message = "Password must be between 8 and 255 characters")
     @Column(nullable = false)
@@ -91,6 +97,7 @@ public class User implements UserDetails {
     @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
