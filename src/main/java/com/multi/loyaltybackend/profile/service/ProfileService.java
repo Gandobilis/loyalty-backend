@@ -88,6 +88,7 @@ public class ProfileService {
                 .eventCount(user.getEventCount())
                 .workingHours(user.getWorkingHours())
                 .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
                 .build();
     }
 }

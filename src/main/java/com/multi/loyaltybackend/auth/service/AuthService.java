@@ -34,10 +34,11 @@ public class AuthService {
             throw new IllegalArgumentException("User with this email already exists.");
         }
 
+
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
+                .role(request.getRole() == null ? Role.USER : request.getRole())
                 .fullName(request.getFullName())
                 .build();
 
