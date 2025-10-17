@@ -41,9 +41,8 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @NotBlank(message = "Password is required")
     @Size(min = 8, max = 255, message = "Password must be between 8 and 255 characters")
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
 
     private String passwordResetToken;
