@@ -8,6 +8,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -17,15 +19,14 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final TokenBlacklistService tokenBlacklistService;
     private final EmailService emailService;
+    public static final List<String> blackList = new ArrayList<>();
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager, TokenBlacklistService tokenBlacklistService, EmailService emailService) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
-        this.tokenBlacklistService = tokenBlacklistService;
         this.emailService = emailService;
     }
 
@@ -54,7 +55,7 @@ public class AuthService {
     }
 
     public void logout(String token) {
-        tokenBlacklistService.addToBlocklist(token);
+        blackList.add(token);
     }
 
     public void initiatePasswordReset(String email) {

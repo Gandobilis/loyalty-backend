@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -42,13 +43,17 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**",
                                 "/api/public/**",
                                 "/api/images/**",
-                                "/actuator/info").permitAll()
+                                "/actuator/info",
+                                "/h2-console/**").permitAll()
 
                         .requestMatchers(
                                 "/api/profile/**", "/api/events/**", "/api/companies/**", "/api/vouchers/**", "/api/user-vouchers/**"
                         ).hasAnyRole("ADMIN", "USER")
 
                         .anyRequest().authenticated()
+                )
+                .headers(headers -> headers
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())

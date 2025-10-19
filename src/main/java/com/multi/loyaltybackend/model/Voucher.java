@@ -1,5 +1,6 @@
 package com.multi.loyaltybackend.model;
 
+import com.multi.loyaltybackend.company.model.Company;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
