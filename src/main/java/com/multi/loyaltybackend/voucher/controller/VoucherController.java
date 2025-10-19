@@ -1,7 +1,7 @@
-package com.multi.loyaltybackend.controller;
+package com.multi.loyaltybackend.voucher.controller;
 
-import com.multi.loyaltybackend.model.Voucher;
-import com.multi.loyaltybackend.service.VoucherService;
+import com.multi.loyaltybackend.voucher.model.Voucher;
+import com.multi.loyaltybackend.voucher.service.VoucherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

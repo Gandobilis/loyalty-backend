@@ -1,7 +1,7 @@
-package com.multi.loyaltybackend.repository;
+package com.multi.loyaltybackend.voucher.repository;
 
-import com.multi.loyaltybackend.model.UserVoucher;
 import com.multi.loyaltybackend.model.VoucherStatus;
+import com.multi.loyaltybackend.voucher.model.UserVoucher;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

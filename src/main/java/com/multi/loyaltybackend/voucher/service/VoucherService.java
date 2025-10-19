@@ -1,7 +1,7 @@
-package com.multi.loyaltybackend.service;
+package com.multi.loyaltybackend.voucher.service;
 
-import com.multi.loyaltybackend.model.Voucher;
-import com.multi.loyaltybackend.repository.VoucherRepository;
+import com.multi.loyaltybackend.voucher.repository.VoucherRepository;
+import com.multi.loyaltybackend.voucher.model.Voucher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

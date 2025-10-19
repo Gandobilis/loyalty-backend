@@ -1,8 +1,8 @@
-package com.multi.loyaltybackend.model;
+package com.multi.loyaltybackend.voucher.model;
 
 import com.multi.loyaltybackend.company.model.Company;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @Table(name = "vouchers")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class Voucher {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

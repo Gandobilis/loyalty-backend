@@ -41,7 +41,7 @@ public class ImageStorageService {
         try {
             Resource resource = new UrlResource(path.toUri());
             if (resource.exists() && resource.isReadable()) {
-                return "http://localhost:8080/api/" + path;
+                return "http://localhost:8080/api/images/" + fileName;
             } else {
                 throw new RuntimeException("File not found or not readable");
             }
