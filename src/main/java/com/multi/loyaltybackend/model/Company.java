@@ -1,15 +1,12 @@
 package com.multi.loyaltybackend.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "companies")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class Company {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,7 +15,6 @@ public class Company {
     @Column(nullable = false)
     private String name;
 
-    private String fileName;
-
-    private String description;
+    private String logoFileName;
+    private String desc;
 }
