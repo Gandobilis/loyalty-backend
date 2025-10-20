@@ -40,19 +40,25 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**",
+                        .requestMatchers(
+                                "/api/auth/**",
                                 "/api/public/**",
                                 "/api/images/**",
                                 "/actuator/info",
                                 "/h2-console/**").permitAll()
 
                         .requestMatchers(
-                                "/api/profile/**", "/api/events/**", "/api/companies/**", "/api/vouchers/**", "/api/user-vouchers/**"
+                                "/api/profile/**",
+                                "/api/events/**",
+                                "/api/vouchers/**",
+                                "/api/user-vouchers/**"
                         ).hasAnyRole("ADMIN", "USER")
-
+                        .requestMatchers(
+                                "/api/companies/**"
+                        ).hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
-                .headers(headers -> headers
+                /*.headers(headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -62,7 +68,9 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/actuator/health", true)
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                 )
+                */
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
 
         return http.build();
     }

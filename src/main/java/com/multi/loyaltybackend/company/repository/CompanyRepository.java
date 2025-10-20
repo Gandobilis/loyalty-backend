@@ -1,7 +1,7 @@
 package com.multi.loyaltybackend.company.repository;
 
-import com.multi.loyaltybackend.company.model.Company;
 import org.springframework.data.jpa.repository.JpaRepository;
+import com.multi.loyaltybackend.company.model.Company;
 import org.springframework.stereotype.Repository;
 
 @Repository

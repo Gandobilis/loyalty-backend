@@ -9,7 +9,6 @@ import com.multi.loyaltybackend.service.ImageStorageService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -21,7 +20,9 @@ public class CompanyService {
     public List<Company> getAllCompanies() {
         List<Company> companies = companyRepository.findAll();
         companies.forEach(company -> {
-            company.setLogoFileName(imageStorageService.getFilePath(company.getLogoFileName()));
+            if (company.getLogoFileName() != null) {
+                company.setLogoFileName(imageStorageService.getFilePath(company.getLogoFileName()));
+            }
         });
         return companies;
     }
@@ -33,20 +34,16 @@ public class CompanyService {
     @Transactional
     public Company createCompany(Company company, MultipartFile file) {
         String fileName = null;
-
         try {
             if (file != null && !file.isEmpty()) {
                 fileName = imageStorageService.storeFile(file);
                 company.setLogoFileName(fileName);
             }
-
             return companyRepository.save(company);
-
         } catch (Exception e) {
             if (fileName != null) {
                 imageStorageService.deleteFile(fileName);
             }
-
             throw new RuntimeException("Failed to create company", e);
         }
     }
@@ -55,27 +52,19 @@ public class CompanyService {
     public Company updateCompany(Long id, Company companyDetails, MultipartFile file) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Company not found with id: " + id));
-
         String oldFileName = company.getLogoFileName();
         String newFileName = null;
-
         try {
             if (file != null && !file.isEmpty()) {
                 newFileName = imageStorageService.storeFile(file);
                 company.setLogoFileName(newFileName);
             }
-
             company.setName(companyDetails.getName());
-            company.setDescription(companyDetails.getDescription());
-
             Company savedCompany = companyRepository.save(company);
-
             if (newFileName != null && oldFileName != null) {
                 imageStorageService.deleteFile(oldFileName);
             }
-
             return savedCompany;
-
         } catch (Exception e) {
             if (newFileName != null) {
                 imageStorageService.deleteFile(newFileName);
@@ -88,11 +77,8 @@ public class CompanyService {
     public void deleteCompany(Long id) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Company not found with id: " + id));
-
         String logoFileName = company.getLogoFileName();
-
         companyRepository.delete(company);
-
         if (logoFileName != null) {
             try {
                 imageStorageService.deleteFile(logoFileName);

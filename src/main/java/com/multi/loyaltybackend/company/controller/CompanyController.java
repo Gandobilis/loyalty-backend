@@ -10,7 +10,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -31,7 +30,6 @@ public class CompanyController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Company> createCompany(
             @RequestPart("company") String companyJson,
@@ -39,7 +37,6 @@ public class CompanyController {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             Company company = objectMapper.readValue(companyJson, Company.class);
-
             Company created = companyService.createCompany(company, file);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
@@ -55,7 +52,6 @@ public class CompanyController {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             Company company = objectMapper.readValue(companyJson, Company.class);
-
             Company updated = companyService.updateCompany(id, company, file);
             return ResponseEntity.ok(updated);
         } catch (RuntimeException e) {
