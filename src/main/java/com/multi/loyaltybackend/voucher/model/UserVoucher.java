@@ -1,7 +1,10 @@
 package com.multi.loyaltybackend.voucher.model;
 
+import com.multi.loyaltybackend.model.User;
 import com.multi.loyaltybackend.model.VoucherStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,13 +14,16 @@ import java.time.LocalDateTime;
 @Table(name = "user_vouchers")
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class UserVoucher {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voucher_id", nullable = false)

@@ -1,5 +1,6 @@
 package com.multi.loyaltybackend.model;
 
+import com.multi.loyaltybackend.voucher.model.UserVoucher;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -133,6 +134,9 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Registration> registrations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserVoucher> userVouchers = new ArrayList<>();
 
     public void incrementPoints(int points) {
         if (points < 0) {

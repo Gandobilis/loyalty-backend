@@ -1,11 +1,16 @@
 package com.multi.loyaltybackend.voucher.controller;
 
+import com.multi.loyaltybackend.voucher.dto.UserVoucherRequest;
+import com.multi.loyaltybackend.voucher.dto.VoucherRequest;
+import com.multi.loyaltybackend.voucher.model.UserVoucher;
 import com.multi.loyaltybackend.voucher.model.Voucher;
 import com.multi.loyaltybackend.voucher.service.VoucherService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -26,19 +31,9 @@ public class VoucherController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/company/{companyId}")
-    public ResponseEntity<List<Voucher>> getVouchersByCompany(@PathVariable Long companyId) {
-        return ResponseEntity.ok(voucherService.getVouchersByCompany(companyId));
-    }
-
-    @GetMapping("/active")
-    public ResponseEntity<List<Voucher>> getActiveVouchers() {
-        return ResponseEntity.ok(voucherService.getActiveVouchers());
-    }
-
     @PostMapping
-    public ResponseEntity<Voucher> createVoucher(@RequestBody Voucher voucher) {
-        Voucher created = voucherService.createVoucher(voucher);
+    public ResponseEntity<Voucher> createVoucher(@Valid @RequestBody VoucherRequest request) {
+        Voucher created = voucherService.createVoucher(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
@@ -56,5 +51,14 @@ public class VoucherController {
     public ResponseEntity<Void> deleteVoucher(@PathVariable Long id) {
         voucherService.deleteVoucher(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/exchange")
+    public ResponseEntity<UserVoucher> exchangeVoucher(@Valid @RequestBody UserVoucherRequest request) {
+        UserVoucher created = voucherService.exchangeVoucher(
+                request.getUserId(),
+                request.getVoucherId()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 }
