@@ -235,20 +235,107 @@ This version includes significant improvements over the initial codebase:
 
 ## Development
 
-### Project Structure
+### Current Project Structure
 
 ```
 src/main/java/com/multi/loyaltybackend/
-├── config/          # Configuration classes
-├── controller/      # REST controllers
-├── service/         # Business logic
-├── repository/      # Data access layer
-├── model/          # Entity classes
-├── dto/            # Data transfer objects
-├── exception/      # Custom exceptions
-├── company/        # Company module
-└── voucher/        # Voucher module
+├── config/                     # Configuration classes
+│   ├── SecurityConfig.java    # Security & authentication
+│   ├── OpenAPIConfig.java     # Swagger configuration
+│   └── JwtAuthFilter.java     # JWT filter
+├── controller/                 # REST controllers (mixed)
+│   ├── AuthController.java
+│   ├── ProfileController.java
+│   ├── EventController.java
+│   └── ImageStorageController.java
+├── service/                    # Business logic (mixed)
+│   ├── AuthService.java
+│   ├── ProfileService.java
+│   ├── EventService.java
+│   ├── RegistrationService.java
+│   ├── JwtService.java
+│   ├── EmailService.java
+│   ├── ImageStorageService.java
+│   └── CustomOAuth2UserService.java
+├── repository/                 # Data access (mixed)
+│   ├── UserRepository.java
+│   ├── EventRepository.java
+│   └── RegistrationRepository.java
+├── model/                      # Entities (mixed)
+│   ├── User.java
+│   ├── Event.java
+│   ├── Registration.java
+│   ├── Role.java
+│   └── EventCategory.java
+├── dto/                        # Data transfer objects
+├── exception/                  # Custom exceptions (flat)
+│   ├── GlobalExceptionHandler.java
+│   ├── UserNotFoundException.java
+│   ├── VoucherNotFoundException.java
+│   └── ... (12+ exception classes)
+├── company/                    # ✅ Well-organized module
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   └── model/
+└── voucher/                    # ✅ Well-organized module
+    ├── controller/
+    ├── service/
+    ├── repository/
+    ├── model/
+    └── dto/
 ```
+
+### Recommended Structure (Best Practice)
+
+For better organization and maintainability, we recommend refactoring to a feature-based modular structure.
+See **[STRUCTURE_IMPROVEMENT_GUIDE.md](STRUCTURE_IMPROVEMENT_GUIDE.md)** for detailed refactoring instructions.
+
+**Target Structure:**
+```
+src/main/java/com/multi/loyaltybackend/
+├── auth/                       # Authentication module
+│   ├── controller/
+│   ├── service/
+│   └── dto/
+├── user/                       # User & profile module
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   ├── model/
+│   └── dto/
+├── event/                      # Event management module
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   ├── model/
+│   └── dto/
+├── company/                    # Company module (already good)
+├── voucher/                    # Voucher module (already good)
+├── storage/                    # File storage module
+│   ├── controller/
+│   └── service/
+├── security/                   # Security infrastructure
+│   ├── jwt/
+│   ├── oauth2/
+│   └── config/
+├── config/                     # Application configuration
+└── exception/                  # Exception handling
+    ├── handler/
+    ├── auth/
+    ├── user/
+    ├── event/
+    ├── company/
+    ├── voucher/
+    └── storage/
+```
+
+**Benefits:**
+- Clear module boundaries
+- Consistent structure across all features
+- Easy to find related code
+- Better scalability and testability
+- Can extract to microservices later
 
 ### Best Practices
 
