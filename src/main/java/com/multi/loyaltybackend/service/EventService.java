@@ -115,7 +115,9 @@ public class EventService {
                 event.getUpdatedAt(),
                 event.getUsers().stream().map(registration -> UserDTO.builder()
                         .id(registration.getUser().getId())
-                        .fileName(registration.getUser().getFileName())
+                        .fileName(registration.getUser().getFileName() != null
+                                ? imageStorageService.getFilePath(registration.getUser().getFileName())
+                                : null)
                         .build()).collect(Collectors.toList())
         );
     }
