@@ -394,6 +394,7 @@ public class DataInitializer implements CommandLineRunner {
                 .points(50)
                 .build());
 
+
         eventRepository.saveAll(events);
         log.info("Created {} events", events.size());
         return events;
