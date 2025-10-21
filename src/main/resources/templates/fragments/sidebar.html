@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <aside th:fragment="sidebar" class="sidebar">
+        <nav>
+            <a th:href="@{/admin}" th:classappend="${#httpServletRequest.requestURI == '/admin' ? 'active' : ''}">
+                Dashboard
+            </a>
+            <a th:href="@{/admin/companies}" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/companies') ? 'active' : ''}">
+                Companies
+            </a>
+            <a th:href="@{/admin/vouchers}" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/vouchers') ? 'active' : ''}">
+                Vouchers
+            </a>
+            <a th:href="@{/admin/users}" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/users') ? 'active' : ''}">
+                Users
+            </a>
+            <a href="/swagger-ui/index.html" target="_blank">API Docs</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </aside>
+</body>
+</html>

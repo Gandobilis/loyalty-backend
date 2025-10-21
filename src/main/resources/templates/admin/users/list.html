@@ -1,45 +1,62 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(title='Users', content=~{::content})}">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users - Admin Panel</title>
+    <style th:replace="~{fragments/styles :: admin-styles}"></style>
+</head>
 <body>
-    <div th:fragment="content">
-        <h2>Users Management</h2>
+    <div class="header">
+        <h1>Loyalty Backend - Admin Panel</h1>
+    </div>
 
-        <div class="card">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Email</th>
-                        <th>Full Name</th>
-                        <th>Role</th>
-                        <th>Points</th>
-                        <th>Events</th>
-                        <th>Created At</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:if="${users.isEmpty()}">
-                        <td colspan="7" style="text-align: center; padding: 2rem; color: #7f8c8d;">
-                            No users found.
-                        </td>
-                    </tr>
-                    <tr th:each="user : ${users}">
-                        <td th:text="${user.id}">1</td>
-                        <td th:text="${user.email}">user@example.com</td>
-                        <td th:text="${user.fullName}">John Doe</td>
-                        <td>
-                            <span th:text="${user.role}"
-                                  th:style="${user.role.name() == 'ADMIN' ? 'color: #e74c3c; font-weight: bold;' : 'color: #27ae60;'}">
-                                USER
-                            </span>
-                        </td>
-                        <td th:text="${user.totalPoints}">100</td>
-                        <td th:text="${user.eventCount}">5</td>
-                        <td th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd')}">2024-01-01</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <div class="container">
+        <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+
+        <main class="main-content">
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+            <h2>Users Management</h2>
+
+            <div class="card">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Full Name</th>
+                            <th>Role</th>
+                            <th>Points</th>
+                            <th>Events</th>
+                            <th>Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${users.isEmpty()}">
+                            <td colspan="7" style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                                No users found.
+                            </td>
+                        </tr>
+                        <tr th:each="user : ${users}">
+                            <td th:text="${user.id}">1</td>
+                            <td th:text="${user.email}">user@example.com</td>
+                            <td th:text="${user.fullName}">John Doe</td>
+                            <td>
+                                <span th:text="${user.role}"
+                                      th:style="${user.role.name() == 'ADMIN' ? 'color: #e74c3c; font-weight: bold;' : 'color: #27ae60;'}">
+                                    USER
+                                </span>
+                            </td>
+                            <td th:text="${user.totalPoints}">100</td>
+                            <td th:text="${user.eventCount}">5</td>
+                            <td th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd')}">2024-01-01</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
     </div>
 </body>
 </html>

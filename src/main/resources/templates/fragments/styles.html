@@ -1,10 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${title != null ? title + ' - Admin Panel' : 'Admin Panel'}">Admin Panel</title>
-    <style>
+    <style th:fragment="admin-styles">
         * {
             margin: 0;
             padding: 0;
@@ -209,37 +206,4 @@
         }
     </style>
 </head>
-<body>
-    <div class="header">
-        <h1>Loyalty Backend - Admin Panel</h1>
-    </div>
-
-    <div class="container">
-        <aside class="sidebar">
-            <nav>
-                <a th:href="@{/admin}" th:classappend="${#httpServletRequest.requestURI == '/admin' ? 'active' : ''}">
-                    Dashboard
-                </a>
-                <a th:href="@{/admin/companies}" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/companies') ? 'active' : ''}">
-                    Companies
-                </a>
-                <a th:href="@{/admin/vouchers}" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/vouchers') ? 'active' : ''}">
-                    Vouchers
-                </a>
-                <a th:href="@{/admin/users}" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/users') ? 'active' : ''}">
-                    Users
-                </a>
-                <a href="/api-docs">API Docs</a>
-                <a href="/logout">Logout</a>
-            </nav>
-        </aside>
-
-        <main class="main-content">
-            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
-            <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
-
-            <div th:replace="${content}"></div>
-        </main>
-    </div>
-</body>
 </html>
