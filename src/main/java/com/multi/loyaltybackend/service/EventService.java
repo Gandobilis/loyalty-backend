@@ -3,7 +3,9 @@ package com.multi.loyaltybackend.service;
 
 import com.multi.loyaltybackend.dto.EventRequestDTO;
 import com.multi.loyaltybackend.dto.EventResponseDTO;
+import com.multi.loyaltybackend.dto.UserDTO;
 import com.multi.loyaltybackend.model.Event;
+import com.multi.loyaltybackend.model.Registration;
 import com.multi.loyaltybackend.repository.EventRepository; // Hypothetical
 import com.multi.loyaltybackend.repository.EventSpecifications;
 import jakarta.persistence.EntityNotFoundException;
@@ -107,7 +109,10 @@ public class EventService {
                 event.getDateTime(),
                 event.getCreatedAt(),
                 event.getUpdatedAt(),
-                event.getUsers().stream().map(user -> user.getUser().getFileName()).collect(Collectors.toList())
+                event.getUsers().stream().map(registration -> UserDTO.builder()
+                        .id(registration.getUser().getId())
+                        .fileName(registration.getUser().getFileName())
+                        .build()).collect(Collectors.toList())
         );
     }
 }

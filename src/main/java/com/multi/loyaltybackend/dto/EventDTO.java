@@ -1,5 +1,6 @@
 package com.multi.loyaltybackend.dto;
 
+import com.multi.loyaltybackend.model.RegistrationStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -14,4 +15,6 @@ public class EventDTO {
     private String title;
     private Integer points;
     private LocalDateTime dateTime;
+    private String fileName;
+    private RegistrationStatus status;
 }

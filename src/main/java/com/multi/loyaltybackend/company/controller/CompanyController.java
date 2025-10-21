@@ -3,6 +3,7 @@ package com.multi.loyaltybackend.company.controller;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.multi.loyaltybackend.company.dto.CompanyResponseDTO;
 import com.multi.loyaltybackend.company.service.CompanyService;
 import com.multi.loyaltybackend.company.model.Company;
 import org.springframework.http.HttpStatus;
@@ -19,12 +20,12 @@ public class CompanyController {
     private final CompanyService companyService;
 
     @GetMapping
-    public ResponseEntity<List<Company>> getAllCompanies() {
+    public ResponseEntity<List<CompanyResponseDTO>> getAllCompanies() {
         return ResponseEntity.ok(companyService.getAllCompanies());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Company> getCompanyById(@PathVariable Long id) {
+    public ResponseEntity<CompanyResponseDTO> getCompanyById(@PathVariable Long id) {
         return companyService.getCompanyById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

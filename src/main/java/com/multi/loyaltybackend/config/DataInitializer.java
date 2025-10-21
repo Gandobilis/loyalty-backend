@@ -3,8 +3,8 @@ package com.multi.loyaltybackend.config;
 import com.multi.loyaltybackend.company.model.Company;
 import com.multi.loyaltybackend.company.repository.CompanyRepository;
 import com.multi.loyaltybackend.model.*;
-import com.multi.loyaltybackend.repository.EventRegistrationRepository;
 import com.multi.loyaltybackend.repository.EventRepository;
+import com.multi.loyaltybackend.repository.RegistrationRepository;
 import com.multi.loyaltybackend.repository.UserRepository;
 import com.multi.loyaltybackend.voucher.model.UserVoucher;
 import com.multi.loyaltybackend.voucher.model.Voucher;
@@ -42,7 +42,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
-    private final EventRegistrationRepository registrationRepository;
+    private final RegistrationRepository registrationRepository;
     private final CompanyRepository companyRepository;
     private final VoucherRepository voucherRepository;
     private final UserVoucherRepository userVoucherRepository;
@@ -192,27 +192,22 @@ public class DataInitializer implements CommandLineRunner {
 
         companies.add(Company.builder()
                 .name("TechCorp Solutions")
-                .logoFileName("techcorp-logo.png")
                 .build());
 
         companies.add(Company.builder()
                 .name("Green Earth Foundation")
-                .logoFileName("greenearth-logo.png")
                 .build());
 
         companies.add(Company.builder()
                 .name("Fitness Plus")
-                .logoFileName("fitnessplus-logo.png")
                 .build());
 
         companies.add(Company.builder()
                 .name("BookWorld")
-                .logoFileName("bookworld-logo.png")
                 .build());
 
         companies.add(Company.builder()
                 .name("Coffee Culture")
-                .logoFileName("coffeeculture-logo.png")
                 .build());
 
         companyRepository.saveAll(companies);
@@ -318,7 +313,7 @@ public class DataInitializer implements CommandLineRunner {
                 .longitude(44.8075)
                 .dateTime(LocalDateTime.now().plusDays(8).withHour(10).withMinute(0))
                 .points(60)
-                .build();
+                .build());
 
         events.add(Event.builder()
                 .title("Financial Literacy Seminar")

@@ -2,6 +2,7 @@ package com.multi.loyaltybackend.voucher.controller;
 
 import com.multi.loyaltybackend.voucher.dto.UserVoucherRequest;
 import com.multi.loyaltybackend.voucher.dto.VoucherRequest;
+import com.multi.loyaltybackend.voucher.dto.VoucherWithCompanyDTO;
 import com.multi.loyaltybackend.voucher.model.UserVoucher;
 import com.multi.loyaltybackend.voucher.model.Voucher;
 import com.multi.loyaltybackend.voucher.service.VoucherService;
@@ -20,12 +21,12 @@ public class VoucherController {
     private final VoucherService voucherService;
 
     @GetMapping
-    public ResponseEntity<List<Voucher>> getAllVouchers() {
+    public ResponseEntity<List<VoucherWithCompanyDTO>> getAllVouchers() {
         return ResponseEntity.ok(voucherService.getAllVouchers());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Voucher> getVoucherById(@PathVariable Long id) {
+    public ResponseEntity<VoucherWithCompanyDTO> getVoucherById(@PathVariable Long id) {
         return voucherService.getVoucherById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

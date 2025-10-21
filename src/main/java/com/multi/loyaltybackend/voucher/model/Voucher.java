@@ -18,6 +18,8 @@ import com.multi.loyaltybackend.company.model.Company;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @ToString(exclude = "company")
 @EqualsAndHashCode(exclude = "company")
 public class Voucher {

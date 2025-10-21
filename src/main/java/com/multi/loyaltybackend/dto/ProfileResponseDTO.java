@@ -1,6 +1,8 @@
 package com.multi.loyaltybackend.dto;
 
 import com.multi.loyaltybackend.model.Role;
+import com.multi.loyaltybackend.voucher.dto.VoucherDTO;
+import com.multi.loyaltybackend.voucher.dto.VoucherDTOWithStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -25,4 +27,5 @@ public class ProfileResponseDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<EventDTO> registrations;
+    private List<VoucherDTOWithStatus> vouchers;
 }

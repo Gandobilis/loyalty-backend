@@ -2,6 +2,7 @@ package com.multi.loyaltybackend.config;
 
 import com.multi.loyaltybackend.repository.UserRepository;
 import com.multi.loyaltybackend.service.CustomOAuth2UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -62,6 +63,16 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/api/auth/oauth2/success", true)
                         .failureUrl("/api/auth/oauth2/failure")
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .authorizationEndpoint(authorization -> authorization
+                                .baseUri("/oauth2/authorize"))  // Explicit OAuth2 entry point
+                )
+                // KEY FIX: Add exception handling to return 401 instead of redirecting
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"" + authException.getMessage() + "\"}");
+                        })
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

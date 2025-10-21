@@ -9,6 +9,7 @@ import com.multi.loyaltybackend.repository.UserRepository;
 import com.multi.loyaltybackend.service.ImageStorageService;
 import com.multi.loyaltybackend.voucher.dto.UserVoucherRequest;
 import com.multi.loyaltybackend.voucher.dto.VoucherRequest;
+import com.multi.loyaltybackend.voucher.dto.VoucherWithCompanyDTO;
 import com.multi.loyaltybackend.voucher.model.UserVoucher;
 import com.multi.loyaltybackend.voucher.repository.UserVoucherRepository;
 import com.multi.loyaltybackend.voucher.repository.VoucherRepository;
@@ -24,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,18 +46,55 @@ public class VoucherService {
         return vouchers;
     }
 
-    public List<Voucher> getAllVouchers() {
+    public List<VoucherWithCompanyDTO> getAllVouchers() {
         List<Voucher> vouchers = voucherRepository.findAll();
-        vouchers.forEach(voucher -> {
-            if (voucher.getCompany() != null && voucher.getCompany().getLogoFileName() != null) {
-                voucher.getCompany().setLogoFileName(imageStorageService.getFilePath(voucher.getCompany().getLogoFileName()));
-            }
-        });
-        return vouchers;
+
+        return vouchers.stream()
+                .map(voucher -> {
+                    VoucherWithCompanyDTO.VoucherWithCompanyDTOBuilder builder = VoucherWithCompanyDTO.builder()
+                            .id(voucher.getId())
+                            .title(voucher.getTitle())
+                            .points(voucher.getPoints())
+                            .expiry(voucher.getExpiry())
+                            .description(voucher.getDescription());
+
+                    // Map company fields individually
+                    if (voucher.getCompany() != null) {
+                        Company company = voucher.getCompany();
+                        builder.companyId(company.getId())
+                                .companyName(company.getName())
+                                .companyLogo(company.getLogoFileName() != null
+                                        ? imageStorageService.getFilePath(company.getLogoFileName())
+                                        : null);
+                    }
+
+                    return builder.build();
+                })
+                .collect(Collectors.toList());
     }
 
-    public Optional<Voucher> getVoucherById(Long id) {
-        return voucherRepository.findById(id);
+    public Optional<VoucherWithCompanyDTO> getVoucherById(Long id) {
+        return voucherRepository.findById(id)
+                .map(voucher -> {
+                    VoucherWithCompanyDTO.VoucherWithCompanyDTOBuilder builder = VoucherWithCompanyDTO.builder()
+                            .id(voucher.getId())
+                            .title(voucher.getTitle())
+                            .points(voucher.getPoints())
+                            .expiry(voucher.getExpiry())
+                            .description(voucher.getDescription());
+
+                    // Map company fields individually
+                    if (voucher.getCompany() != null) {
+                        Company company = voucher.getCompany();
+                        builder.companyId(company.getId())
+                                .companyName(company.getName())
+                                .companyLogo(company.getLogoFileName() != null
+                                        ? imageStorageService.getFilePath(company.getLogoFileName())
+                                        : null);
+                    }
+
+                    return builder.build();
+                });
     }
 
     @Transactional

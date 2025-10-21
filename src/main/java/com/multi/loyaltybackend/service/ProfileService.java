@@ -5,6 +5,9 @@ import com.multi.loyaltybackend.dto.ProfileResponseDTO;
 import com.multi.loyaltybackend.model.User;
 import com.multi.loyaltybackend.repository.UserRepository;
 import com.multi.loyaltybackend.dto.ProfileUpdateDTO;
+import com.multi.loyaltybackend.voucher.dto.VoucherDTO;
+import com.multi.loyaltybackend.voucher.dto.VoucherDTOWithStatus;
+import com.multi.loyaltybackend.voucher.model.Voucher;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -74,7 +77,27 @@ public class ProfileService {
 
     private ProfileResponseDTO mapToProfileResponseDTO(User user) {
         return ProfileResponseDTO.builder()
-                .registrations(user.getRegistrations().stream().map(event -> new EventDTO(event.getEvent().getId(), event.getEvent().getTitle(), event.getEvent().getPoints(), event.getEvent().getDateTime())).collect(Collectors.toList()))
+                .registrations(user.getRegistrations().stream()
+                        .map(registration -> new EventDTO(
+                                registration.getEvent().getId(),
+                                registration.getEvent().getTitle(),
+                                registration.getEvent().getPoints(),
+                                registration.getEvent().getDateTime(),
+                                (registration.getEvent().getFileName() != null ? fileStorageService.getFilePath(registration.getEvent().getFileName()) : null),
+                                registration.getStatus()
+                        ))
+                        .collect(Collectors.toList()))
+                .vouchers(user.getUserVouchers().stream().map(userVoucher -> {
+                    Voucher voucher = userVoucher.getVoucher();
+                    return VoucherDTOWithStatus.builder()
+                            .id(voucher.getId())
+                            .title(voucher.getTitle())
+                            .points(voucher.getPoints())
+                            .description(voucher.getDescription())
+                            .expiry(voucher.getExpiry())
+                            .status(userVoucher.getStatus())
+                            .build();
+                }).toList())
                 .id(user.getId())
                 .email(user.getEmail())
                 .fullName(user.getFullName())

@@ -1,13 +1,22 @@
 package com.multi.loyaltybackend.company.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.multi.loyaltybackend.company.dto.CompanyResponseDTO;
 import com.multi.loyaltybackend.company.model.Company;
 import com.multi.loyaltybackend.company.repository.CompanyRepository;
 import com.multi.loyaltybackend.exception.CompanyNotFoundException;
 import com.multi.loyaltybackend.exception.FileStorageException;
 import com.multi.loyaltybackend.service.ImageStorageService;
+import com.multi.loyaltybackend.voucher.dto.VoucherDTO;
+import com.multi.loyaltybackend.voucher.model.UserVoucher;
+import com.multi.loyaltybackend.voucher.model.Voucher;
+import com.multi.loyaltybackend.voucher.repository.UserVoucherRepository;
+import com.multi.loyaltybackend.voucher.repository.VoucherRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class CompanyService {
     private final ImageStorageService imageStorageService;
     private final CompanyRepository companyRepository;
+    private final VoucherRepository voucherRepository;
 
     public Page<Company> getAllCompanies(Pageable pageable) {
         Page<Company> companies = companyRepository.findAll(pageable);
@@ -31,18 +41,29 @@ public class CompanyService {
         return companies;
     }
 
-    public List<Company> getAllCompanies() {
+    public List<CompanyResponseDTO> getAllCompanies() {
         List<Company> companies = companyRepository.findAll();
-        companies.forEach(company -> {
-            if (company.getLogoFileName() != null) {
-                company.setLogoFileName(imageStorageService.getFilePath(company.getLogoFileName()));
-            }
-        });
-        return companies;
+
+        Set<Long> companyIds = companies.stream()
+                .map(Company::getId)
+                .collect(Collectors.toSet());
+
+        Map<Long, List<Voucher>> vouchersByCompany = voucherRepository
+                .findByCompanyIdIn(companyIds)
+                .stream()
+                .collect(Collectors.groupingBy(v -> v.getCompany().getId()));
+
+        return companies.stream()
+                .map(company -> mapToDTO(company, vouchersByCompany.get(company.getId())))
+                .toList();
     }
 
-    public Optional<Company> getCompanyById(Long id) {
-        return companyRepository.findById(id);
+    public Optional<CompanyResponseDTO> getCompanyById(Long id) {
+        return companyRepository.findById(id)
+                .map(company -> {
+                    List<Voucher> vouchers = voucherRepository.findByCompanyId(company.getId());
+                    return mapToDTO(company, vouchers);
+                });
     }
 
     @Transactional
@@ -101,5 +122,33 @@ public class CompanyService {
                 // File can be cleaned up later
             }
         }
+    }
+
+    private CompanyResponseDTO mapToDTO(Company company, List<Voucher> vouchers) {
+        String logoPath = company.getLogoFileName() != null
+                ? imageStorageService.getFilePath(company.getLogoFileName())
+                : null;
+
+        List<VoucherDTO> voucherDTOs = vouchers == null ? List.of() :
+                vouchers.stream()
+                        .map(this::mapVoucherToDTO)
+                        .toList();
+
+        return CompanyResponseDTO.builder()
+                .id(company.getId())
+                .name(company.getName())
+                .logoFileName(logoPath)
+                .vouchers(voucherDTOs)
+                .build();
+    }
+
+    private VoucherDTO mapVoucherToDTO(Voucher voucher) {
+        return VoucherDTO.builder()
+                .id(voucher.getId())
+                .title(voucher.getTitle())
+                .description(voucher.getDescription())
+                .expiry(voucher.getExpiry())
+                .points(voucher.getPoints())
+                .build();
     }
 }
