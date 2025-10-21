@@ -47,6 +47,8 @@ public class User implements UserDetails {
 
     private String passwordResetToken;
 
+    private LocalDateTime passwordResetTokenExpiry;
+
     private String fileName;
 
     @Builder.Default

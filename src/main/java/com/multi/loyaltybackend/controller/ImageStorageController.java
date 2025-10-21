@@ -18,6 +18,12 @@ public class ImageStorageController {
     public ResponseEntity<Resource> getFile(@PathVariable String filename) {
         try {
             Path filePath = storageDir.resolve(filename).normalize();
+
+            // Security: Prevent path traversal attacks
+            if (!filePath.startsWith(storageDir.toAbsolutePath())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+
             Resource resource = new UrlResource(filePath.toUri());
 
             if (resource.exists() && resource.isReadable()) {

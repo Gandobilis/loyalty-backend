@@ -51,6 +51,15 @@ public class RegistrationService {
 
         Registration savedRegistration = eventRegistrationRepository.save(registration);
 
+        // Award points to user for registering to the event
+        if (event.getPoints() != null && event.getPoints() > 0) {
+            user.incrementPoints(event.getPoints());
+            user.incrementEventCount();
+            userRepository.save(user);
+            log.info("Awarded {} points to user {} for registering to event {}",
+                    event.getPoints(), userId, eventId);
+        }
+
         log.info("Successfully registered user {} to event {}", userId, eventId);
 
         return mapToResponse(savedRegistration);

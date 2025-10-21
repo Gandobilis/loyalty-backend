@@ -1,5 +1,8 @@
 package com.multi.loyaltybackend.service;
 
+import com.multi.loyaltybackend.exception.FileStorageException;
+import com.multi.loyaltybackend.exception.InvalidFilePathException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -15,11 +18,14 @@ public class ImageStorageService {
 
     private final Path storageDir = Paths.get("images");
 
+    @Value("${app.server.url}")
+    private String serverUrl;
+
     public ImageStorageService() {
         try {
             Files.createDirectories(storageDir);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to create upload directory", e);
+            throw new FileStorageException("Failed to create upload directory", e);
         }
     }
 
@@ -32,29 +38,42 @@ public class ImageStorageService {
             Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
             return fileName;
         } catch (IOException e) {
-            throw new RuntimeException("Failed to store file", e);
+            throw new FileStorageException("Failed to store file", e);
         }
     }
 
     public String getFilePath(String fileName) {
-        Path path = storageDir.resolve(fileName);
+        Path path = storageDir.resolve(fileName).normalize();
+
+        // Security: Prevent path traversal attacks
+        if (!path.startsWith(storageDir.toAbsolutePath())) {
+            throw new InvalidFilePathException();
+        }
+
         try {
             Resource resource = new UrlResource(path.toUri());
             if (resource.exists() && resource.isReadable()) {
-                return "http://localhost:8080/api/images/" + fileName;
+                return serverUrl + "/api/images/" + fileName;
             } else {
-                throw new RuntimeException("File not found or not readable");
+                throw new FileStorageException("File not found or not readable");
             }
         } catch (MalformedURLException e) {
-            throw new RuntimeException("Invalid file path", e);
+            throw new InvalidFilePathException("Invalid file path: " + e.getMessage());
         }
     }
 
     public void deleteFile(String fileName) {
         try {
-            Files.deleteIfExists(storageDir.resolve(fileName));
+            Path path = storageDir.resolve(fileName).normalize();
+
+            // Security: Prevent path traversal attacks
+            if (!path.startsWith(storageDir.toAbsolutePath())) {
+                throw new InvalidFilePathException();
+            }
+
+            Files.deleteIfExists(path);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to delete file", e);
+            throw new FileStorageException("Failed to delete file", e);
         }
     }
 

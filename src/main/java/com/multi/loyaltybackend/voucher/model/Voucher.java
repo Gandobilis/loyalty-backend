@@ -41,7 +41,7 @@ public class Voucher {
     @NotNull(message = "expiry is required")
     private LocalDateTime expiry;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
     @NotNull(message = "Company is required")
     private Company company;

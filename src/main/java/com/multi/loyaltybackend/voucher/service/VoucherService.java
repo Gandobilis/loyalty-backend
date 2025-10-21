@@ -2,8 +2,7 @@ package com.multi.loyaltybackend.voucher.service;
 
 import com.multi.loyaltybackend.company.model.Company;
 import com.multi.loyaltybackend.company.repository.CompanyRepository;
-import com.multi.loyaltybackend.exception.DuplicateRegistrationException;
-import com.multi.loyaltybackend.exception.ResourceNotFoundException;
+import com.multi.loyaltybackend.exception.*;
 import com.multi.loyaltybackend.model.User;
 import com.multi.loyaltybackend.model.VoucherStatus;
 import com.multi.loyaltybackend.repository.UserRepository;
@@ -19,6 +18,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,10 +34,22 @@ public class VoucherService {
     private final UserRepository userRepository;
     private final UserVoucherRepository userVoucherRepository;
 
+    public Page<Voucher> getAllVouchers(Pageable pageable) {
+        Page<Voucher> vouchers = voucherRepository.findAll(pageable);
+        vouchers.forEach(voucher -> {
+            if (voucher.getCompany() != null && voucher.getCompany().getLogoFileName() != null) {
+                voucher.getCompany().setLogoFileName(imageStorageService.getFilePath(voucher.getCompany().getLogoFileName()));
+            }
+        });
+        return vouchers;
+    }
+
     public List<Voucher> getAllVouchers() {
         List<Voucher> vouchers = voucherRepository.findAll();
         vouchers.forEach(voucher -> {
-            voucher.getCompany().setLogoFileName(imageStorageService.getFilePath(voucher.getCompany().getLogoFileName()));
+            if (voucher.getCompany() != null && voucher.getCompany().getLogoFileName() != null) {
+                voucher.getCompany().setLogoFileName(imageStorageService.getFilePath(voucher.getCompany().getLogoFileName()));
+            }
         });
         return vouchers;
     }
@@ -46,7 +61,7 @@ public class VoucherService {
     @Transactional
     public Voucher createVoucher(VoucherRequest request) {
         Company company = companyRepository.findById(request.getCompanyId())
-                .orElseThrow(() -> new RuntimeException("Company not found with id: " + request.getCompanyId()));
+                .orElseThrow(() -> new CompanyNotFoundException(request.getCompanyId()));
 
         Voucher voucher = new Voucher();
         voucher.setTitle(request.getTitle());
@@ -61,7 +76,7 @@ public class VoucherService {
     @Transactional
     public Voucher updateVoucher(Long id, Voucher voucherDetails) {
         Voucher voucher = voucherRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Voucher not found"));
+                .orElseThrow(() -> new VoucherNotFoundException(id));
 
         voucher.setTitle(voucherDetails.getTitle());
         voucher.setDescription(voucherDetails.getDescription());
@@ -79,17 +94,24 @@ public class VoucherService {
     @Transactional
     public UserVoucher exchangeVoucher(Long userId, Long voucherId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         Voucher voucher = voucherRepository.findById(voucherId)
-                .orElseThrow(() -> new ResourceNotFoundException("Voucher", "id", voucherId));
+                .orElseThrow(() -> new VoucherNotFoundException(voucherId));
 
+        // Check if voucher has expired
+        if (voucher.getExpiry() != null && voucher.getExpiry().isBefore(LocalDateTime.now())) {
+            throw new VoucherExpiredException(voucherId);
+        }
+
+        // Check if user has already exchanged this voucher
         if (userVoucherRepository.existsByUserIdAndVoucherId(userId, voucherId)) {
-            throw new RuntimeException(
-                    String.format("User %d is already exchanged voucher %d", userId, voucherId)
-            );
-        } else if (user.getTotalPoints() < voucher.getPoints()) {
-            throw new RuntimeException("Total points not enough");
+            throw new VoucherAlreadyExchangedException(userId, voucherId);
+        }
+
+        // Check if user has sufficient points
+        if (user.getTotalPoints() < voucher.getPoints()) {
+            throw new InsufficientPointsException(voucher.getPoints(), user.getTotalPoints());
         }
 
         UserVoucher userVoucher = UserVoucher.builder()
