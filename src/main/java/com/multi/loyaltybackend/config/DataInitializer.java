@@ -178,6 +178,8 @@ public class DataInitializer implements CommandLineRunner {
                 .build();
         users.add(user6);
 
+        users.forEach(user -> user.setFileName("file.png"));
+
         userRepository.saveAll(users);
         log.info("Created {} users", users.size());
         return users;
@@ -209,6 +211,8 @@ public class DataInitializer implements CommandLineRunner {
         companies.add(Company.builder()
                 .name("Coffee Culture")
                 .build());
+
+        companies.forEach(user -> user.setLogoFileName("file.png"));
 
         companyRepository.saveAll(companies);
         log.info("Created {} companies", companies.size());
@@ -393,6 +397,8 @@ public class DataInitializer implements CommandLineRunner {
                 .dateTime(LocalDateTime.now().plusDays(30).withHour(18).withMinute(0))
                 .points(50)
                 .build());
+
+        events.forEach(user -> user.setFileName("file.png"));
 
         eventRepository.saveAll(events);
         log.info("Created {} events", events.size());

@@ -45,11 +45,6 @@ public class ImageStorageService {
     public String getFilePath(String fileName) {
         Path path = storageDir.resolve(fileName).normalize();
 
-        // Security: Prevent path traversal attacks
-        if (!path.startsWith(storageDir.toAbsolutePath())) {
-            throw new InvalidFilePathException();
-        }
-
         try {
             Resource resource = new UrlResource(path.toUri());
             if (resource.exists() && resource.isReadable()) {
@@ -65,11 +60,6 @@ public class ImageStorageService {
     public void deleteFile(String fileName) {
         try {
             Path path = storageDir.resolve(fileName).normalize();
-
-            // Security: Prevent path traversal attacks
-            if (!path.startsWith(storageDir.toAbsolutePath())) {
-                throw new InvalidFilePathException();
-            }
 
             Files.deleteIfExists(path);
         } catch (IOException e) {

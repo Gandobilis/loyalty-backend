@@ -22,9 +22,11 @@ import java.util.stream.Collectors;
 public class EventService {
 
     private final EventRepository eventRepository;
+    ImageStorageService imageStorageService;
 
-    public EventService(EventRepository eventRepository) {
+    public EventService(EventRepository eventRepository,  ImageStorageService imageStorageService) {
         this.eventRepository = eventRepository;
+        this.imageStorageService = imageStorageService;
     }
 
     public EventResponseDTO createEvent(EventRequestDTO request) {
@@ -98,7 +100,9 @@ public class EventService {
     private EventResponseDTO mapEntityToResponse(Event event) {
         return new EventResponseDTO(
                 event.getId(),
-                event.getFileName(),
+                (event.getFileName() != null
+                        ? imageStorageService.getFilePath(event.getFileName())
+                        : null),
                 event.getTitle(),
                 event.getShortDescription(),
                 event.getDescription(),
@@ -111,7 +115,9 @@ public class EventService {
                 event.getUpdatedAt(),
                 event.getUsers().stream().map(registration -> UserDTO.builder()
                         .id(registration.getUser().getId())
-                        .fileName(registration.getUser().getFileName())
+                        .fileName(registration.getUser().getFileName() != null
+                                ? imageStorageService.getFilePath(registration.getUser().getFileName())
+                                : null)
                         .build()).collect(Collectors.toList())
         );
     }
