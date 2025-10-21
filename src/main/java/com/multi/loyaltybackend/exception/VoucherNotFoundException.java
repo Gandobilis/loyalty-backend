@@ -1,6 +1,6 @@
 package com.multi.loyaltybackend.exception;
 
-public class VoucherNotFoundException extends ResourceNotFoundException {
+public class VoucherNotFoundException extends RuntimeException {
     public VoucherNotFoundException(Long id) {
         super("Voucher not found with id: " + id);
     }
