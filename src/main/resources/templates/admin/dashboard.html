@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Admin Panel</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <style th:replace="~{fragments/styles :: admin-styles}"></style>
+</head>
+<body>
+    <div class="header">
+        <h1>Loyalty Backend - Admin Panel</h1>
+    </div>
+
+    <div class="container">
+        <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+
+        <main class="main-content">
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+            <h2>Dashboard</h2>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Users</h3>
+                    <div class="value" th:text="${stats.totalUsers}">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Admins</h3>
+                    <div class="value" th:text="${stats.totalAdmins}">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Companies</h3>
+                    <div class="value" th:text="${stats.totalCompanies}">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Vouchers</h3>
+                    <div class="value" th:text="${stats.totalVouchers}">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Vouchers</h3>
+                    <div class="value" th:text="${stats.activeVouchers}">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Expired Vouchers</h3>
+                    <div class="value" th:text="${stats.expiredVouchers}">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Events</h3>
+                    <div class="value" th:text="${stats.totalEvents}">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Registrations</h3>
+                    <div class="value" th:text="${stats.totalRegistrations}">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Points Distributed</h3>
+                    <div class="value" th:text="${stats.totalPointsDistributed}">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Vouchers Exchanged</h3>
+                    <div class="value" th:text="${stats.totalVouchersExchanged}">0</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Quick Actions</h2>
+                <div class="actions">
+                    <a th:href="@{/admin/companies/new}" class="btn btn-primary">Add Company</a>
+                    <a th:href="@{/admin/vouchers/new}" class="btn btn-success">Add Voucher</a>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

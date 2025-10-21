@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <aside th:fragment="sidebar" class="sidebar">
+        <nav>
+            <a th:href="@{/admin}">Dashboard</a>
+            <a th:href="@{/admin/companies}">Companies</a>
+            <a th:href="@{/admin/vouchers}">Vouchers</a>
+            <a th:href="@{/admin/users}">Users</a>
+            <a href="/swagger-ui/index.html" target="_blank">API Docs</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </aside>
+</body>
+</html>
