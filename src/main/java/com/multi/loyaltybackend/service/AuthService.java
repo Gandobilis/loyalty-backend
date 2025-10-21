@@ -1,5 +1,9 @@
 package com.multi.loyaltybackend.service;
 
+import com.multi.loyaltybackend.exception.EmailAlreadyExistsException;
+import com.multi.loyaltybackend.exception.InvalidPasswordResetTokenException;
+import com.multi.loyaltybackend.exception.PasswordResetTokenExpiredException;
+import com.multi.loyaltybackend.exception.UserNotFoundException;
 import com.multi.loyaltybackend.model.Role;
 import com.multi.loyaltybackend.model.User;
 import com.multi.loyaltybackend.repository.UserRepository;
@@ -8,9 +12,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class AuthService {
@@ -20,7 +25,9 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
-    public static final List<String> blackList = new ArrayList<>();
+    // Thread-safe set for blacklisted tokens
+    // TODO: Consider using Redis with TTL for production to prevent memory leaks
+    public static final Set<String> blackList = ConcurrentHashMap.newKeySet();
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager, EmailService emailService) {
         this.userRepository = userRepository;
@@ -32,7 +39,7 @@ public class AuthService {
 
     public void register(User request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("User with this email already exists.");
+            throw new EmailAlreadyExistsException(request.getEmail());
         }
 
 
@@ -60,10 +67,12 @@ public class AuthService {
 
     public void initiatePasswordReset(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with this email: " + email));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
         String token = UUID.randomUUID().toString();
         user.setPasswordResetToken(token);
+        // Set token expiration to 1 hour from now
+        user.setPasswordResetTokenExpiry(LocalDateTime.now().plusHours(1));
         userRepository.save(user);
 
         emailService.sendPasswordResetEmail(email, token);
@@ -71,10 +80,17 @@ public class AuthService {
 
     public void resetPassword(String token, String newPassword) {
         User user = userRepository.findByPasswordResetToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid password reset token."));
+                .orElseThrow(() -> new InvalidPasswordResetTokenException());
+
+        // Check if token has expired
+        if (user.getPasswordResetTokenExpiry() == null ||
+            user.getPasswordResetTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new PasswordResetTokenExpiredException();
+        }
 
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setPasswordResetToken(null);
+        user.setPasswordResetTokenExpiry(null);
         userRepository.save(user);
     }
 }

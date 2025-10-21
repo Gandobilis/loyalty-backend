@@ -5,7 +5,11 @@ import java.util.Optional;
 
 import com.multi.loyaltybackend.company.model.Company;
 import com.multi.loyaltybackend.company.repository.CompanyRepository;
+import com.multi.loyaltybackend.exception.CompanyNotFoundException;
+import com.multi.loyaltybackend.exception.FileStorageException;
 import com.multi.loyaltybackend.service.ImageStorageService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,6 +20,16 @@ import lombok.RequiredArgsConstructor;
 public class CompanyService {
     private final ImageStorageService imageStorageService;
     private final CompanyRepository companyRepository;
+
+    public Page<Company> getAllCompanies(Pageable pageable) {
+        Page<Company> companies = companyRepository.findAll(pageable);
+        companies.forEach(company -> {
+            if (company.getLogoFileName() != null) {
+                company.setLogoFileName(imageStorageService.getFilePath(company.getLogoFileName()));
+            }
+        });
+        return companies;
+    }
 
     public List<Company> getAllCompanies() {
         List<Company> companies = companyRepository.findAll();
@@ -44,14 +58,14 @@ public class CompanyService {
             if (fileName != null) {
                 imageStorageService.deleteFile(fileName);
             }
-            throw new RuntimeException("Failed to create company", e);
+            throw new FileStorageException("Failed to create company", e);
         }
     }
 
     @Transactional
     public Company updateCompany(Long id, Company companyDetails, MultipartFile file) {
         Company company = companyRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Company not found with id: " + id));
+                .orElseThrow(() -> new CompanyNotFoundException(id));
         String oldFileName = company.getLogoFileName();
         String newFileName = null;
         try {
@@ -69,14 +83,14 @@ public class CompanyService {
             if (newFileName != null) {
                 imageStorageService.deleteFile(newFileName);
             }
-            throw new RuntimeException("Failed to update company", e);
+            throw new FileStorageException("Failed to update company", e);
         }
     }
 
     @Transactional
     public void deleteCompany(Long id) {
         Company company = companyRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Company not found with id: " + id));
+                .orElseThrow(() -> new CompanyNotFoundException(id));
         String logoFileName = company.getLogoFileName();
         companyRepository.delete(company);
         if (logoFileName != null) {

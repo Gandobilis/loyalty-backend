@@ -33,7 +33,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         Map<String, Object> attributes = oAuth2User.getAttributes();
         String email = (String) attributes.get("email");
         String name = (String) attributes.getOrDefault("name", "Unknown");
-        System.out.println(attributes);
 
         if (email == null) {
             throw new OAuth2AuthenticationException("Email not found from OAuth2 provider");
