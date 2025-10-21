@@ -110,14 +110,21 @@ public class AdminViewController {
 
     @GetMapping("/vouchers/new")
     public String newVoucherForm(Model model) {
-        model.addAttribute("voucher", new VoucherRequest());
+        model.addAttribute("voucher", new com.multi.loyaltybackend.voucher.dto.VoucherFormDTO());
         model.addAttribute("companies", companyService.getAllCompanies());
         return "admin/vouchers/form";
     }
 
     @PostMapping("/vouchers/new")
-    public String createVoucher(@ModelAttribute VoucherRequest voucherRequest, RedirectAttributes redirectAttributes) {
+    public String createVoucher(@ModelAttribute com.multi.loyaltybackend.voucher.dto.VoucherFormDTO voucherForm, RedirectAttributes redirectAttributes) {
         try {
+            VoucherRequest voucherRequest = new VoucherRequest(
+                    voucherForm.getTitle(),
+                    voucherForm.getDescription(),
+                    voucherForm.getPoints(),
+                    voucherForm.getExpiry(),
+                    voucherForm.getCompanyId()
+            );
             voucherService.createVoucher(voucherRequest);
             redirectAttributes.addFlashAttribute("successMessage", "Voucher created successfully!");
             return "redirect:/admin/vouchers";
@@ -131,7 +138,15 @@ public class AdminViewController {
     public String editVoucherForm(@PathVariable Long id, Model model) {
         voucherService.getVoucherById(id).ifPresentOrElse(
                 voucher -> {
-                    model.addAttribute("voucher", voucher);
+                    com.multi.loyaltybackend.voucher.dto.VoucherFormDTO formDTO = com.multi.loyaltybackend.voucher.dto.VoucherFormDTO.builder()
+                            .id(voucher.getId())
+                            .title(voucher.getTitle())
+                            .description(voucher.getDescription())
+                            .points(voucher.getPoints())
+                            .expiry(voucher.getExpiry())
+                            .companyId(voucher.getCompanyId())
+                            .build();
+                    model.addAttribute("voucher", formDTO);
                     model.addAttribute("companies", companyService.getAllCompanies());
                 },
                 () -> model.addAttribute("errorMessage", "Voucher not found")
@@ -142,9 +157,14 @@ public class AdminViewController {
     @PostMapping("/vouchers/edit/{id}")
     public String updateVoucher(
             @PathVariable Long id,
-            @ModelAttribute Voucher voucher,
+            @ModelAttribute com.multi.loyaltybackend.voucher.dto.VoucherFormDTO voucherForm,
             RedirectAttributes redirectAttributes) {
         try {
+            Voucher voucher = new Voucher();
+            voucher.setTitle(voucherForm.getTitle());
+            voucher.setDescription(voucherForm.getDescription());
+            voucher.setPoints(voucherForm.getPoints());
+            voucher.setExpiry(voucherForm.getExpiry());
             voucherService.updateVoucher(id, voucher);
             redirectAttributes.addFlashAttribute("successMessage", "Voucher updated successfully!");
             return "redirect:/admin/vouchers";
