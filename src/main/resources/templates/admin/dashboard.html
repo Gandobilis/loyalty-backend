@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(title='Dashboard', content=~{::content})}">
+<body>
+    <div th:fragment="content">
+        <h2>Dashboard</h2>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Users</h3>
+                <div class="value" th:text="${stats.totalUsers}">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Admins</h3>
+                <div class="value" th:text="${stats.totalAdmins}">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Companies</h3>
+                <div class="value" th:text="${stats.totalCompanies}">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Vouchers</h3>
+                <div class="value" th:text="${stats.totalVouchers}">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Active Vouchers</h3>
+                <div class="value" th:text="${stats.activeVouchers}">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Expired Vouchers</h3>
+                <div class="value" th:text="${stats.expiredVouchers}">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Events</h3>
+                <div class="value" th:text="${stats.totalEvents}">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Registrations</h3>
+                <div class="value" th:text="${stats.totalRegistrations}">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Points Distributed</h3>
+                <div class="value" th:text="${stats.totalPointsDistributed}">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Vouchers Exchanged</h3>
+                <div class="value" th:text="${stats.totalVouchersExchanged}">0</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Quick Actions</h2>
+            <div class="actions">
+                <a th:href="@{/admin/companies/new}" class="btn btn-primary">Add Company</a>
+                <a th:href="@{/admin/vouchers/new}" class="btn btn-success">Add Voucher</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

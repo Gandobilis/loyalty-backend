@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(title=${voucher.id != null ? 'Edit Voucher' : 'New Voucher'}, content=~{::content})}">
+<body>
+    <div th:fragment="content">
+        <h2 th:text="${voucher.id != null ? 'Edit Voucher' : 'New Voucher'}">Voucher Form</h2>
+
+        <div class="card">
+            <form th:action="${voucher.id != null ? '/admin/vouchers/edit/' + voucher.id : '/admin/vouchers/new'}"
+                  method="post" th:object="${voucher}">
+
+                <div class="form-group">
+                    <label for="title">Title *</label>
+                    <input type="text" id="title" name="title" th:value="*{title}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description *</label>
+                    <textarea id="description" name="description" th:text="*{description}" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="points">Points Required *</label>
+                    <input type="number" id="points" name="points" th:value="*{points}" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="companyId">Company *</label>
+                    <select id="companyId" name="companyId" required>
+                        <option value="">-- Select Company --</option>
+                        <option th:each="company : ${companies}"
+                                th:value="${company.id}"
+                                th:text="${company.name}"
+                                th:selected="${voucher.companyId != null && voucher.companyId == company.id}">
+                            Company Name
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="expiry">Expiry Date & Time *</label>
+                    <input type="datetime-local" id="expiry" name="expiry"
+                           th:value="${voucher.expiry != null ? #temporals.format(voucher.expiry, 'yyyy-MM-dd''T''HH:mm') : ''}"
+                           required>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="btn btn-primary">
+                        <span th:text="${voucher.id != null ? 'Update' : 'Create'}">Submit</span>
+                    </button>
+                    <a th:href="@{/admin/vouchers}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
