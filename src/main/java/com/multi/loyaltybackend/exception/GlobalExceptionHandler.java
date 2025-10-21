@@ -1,5 +1,6 @@
 package com.multi.loyaltybackend.exception;
 
+import com.multi.loyaltybackend.dto.ApiResponse;
 import com.multi.loyaltybackend.filter.CorrelationIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
  * Global exception handler for the application.
  * Provides centralized exception handling with:
  * - Comprehensive logging with correlation IDs
- * - Consistent error response format
+ * - Consistent error response format (ApiResponse structure)
  * - Error code mapping
  * - Environment-aware debugging information
  * - Request context tracking
@@ -40,25 +41,29 @@ public class GlobalExceptionHandler {
      * Provides comprehensive error handling with error codes and context.
      */
     @ExceptionHandler(BaseException.class)
-    public ResponseEntity<ErrorResponse> handleBaseException(
+    public ResponseEntity<ApiResponse<Object>> handleBaseException(
             BaseException ex,
             HttpServletRequest request
     ) {
         logException(ex, request, ex.getHttpStatus());
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                ex.getErrorCode().getCode(),
+                ex.getHttpStatus().getReasonPhrase(),
+                ex.getMessage()
+        );
+        errorDetails.setContext(ex.getContext().isEmpty() ? null : ex.getContext());
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
                 .timestamp(LocalDateTime.now())
-                .status(ex.getHttpStatus().value())
-                .errorCode(ex.getErrorCode().getCode())
-                .error(ex.getHttpStatus().getReasonPhrase())
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
                 .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
-                .context(ex.getContext().isEmpty() ? null : ex.getContext())
-                .stackTrace(includeStackTrace ? getStackTrace(ex) : null)
+                .path(request.getRequestURI())
                 .build();
 
-        return new ResponseEntity<>(errorResponse, ex.getHttpStatus());
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
     }
 
     /**
@@ -66,7 +71,7 @@ public class GlobalExceptionHandler {
      * Returns detailed field-level validation errors.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(
+    public ResponseEntity<ApiResponse<Object>> handleValidationExceptions(
             MethodArgumentNotValidException ex,
             HttpServletRequest request
     ) {
@@ -82,19 +87,23 @@ public class GlobalExceptionHandler {
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                ErrorCode.VALIDATION_FAILED.getCode(),
+                "Validation Failed",
+                errorMessage
+        );
+        errorDetails.setContext(Map.of("fieldErrors", validationErrors));
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .errorCode(ErrorCode.VALIDATION_FAILED.getCode())
-                .error("Validation Failed")
-                .message(errorMessage)
-                .path(request.getRequestURI())
                 .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
-                .context(Map.of("fieldErrors", validationErrors))
-                .stackTrace(includeStackTrace ? getStackTrace(ex) : null)
+                .path(request.getRequestURI())
                 .build();
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     /**
@@ -102,24 +111,28 @@ public class GlobalExceptionHandler {
      * Returns 401 Unauthorized for invalid credentials or missing users.
      */
     @ExceptionHandler({BadCredentialsException.class, UsernameNotFoundException.class})
-    public ResponseEntity<ErrorResponse> handleAuthenticationException(
+    public ResponseEntity<ApiResponse<Object>> handleAuthenticationException(
             Exception ex,
             HttpServletRequest request
     ) {
         logException(ex, request, HttpStatus.UNAUTHORIZED);
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                ErrorCode.AUTHENTICATION_FAILED.getCode(),
+                "Authentication Failed",
+                "Invalid credentials or user not found"
+        );
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.UNAUTHORIZED.value())
-                .errorCode(ErrorCode.AUTHENTICATION_FAILED.getCode())
-                .error("Authentication Failed")
-                .message("Invalid credentials or user not found")
-                .path(request.getRequestURI())
                 .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
-                .stackTrace(includeStackTrace ? getStackTrace(ex) : null)
+                .path(request.getRequestURI())
                 .build();
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
     /**
@@ -127,7 +140,7 @@ public class GlobalExceptionHandler {
      * Returns 404 Not Found with resource details.
      */
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
+    public ResponseEntity<ApiResponse<Object>> handleResourceNotFoundException(
             ResourceNotFoundException ex,
             HttpServletRequest request
     ) {
@@ -138,19 +151,23 @@ public class GlobalExceptionHandler {
         context.put("fieldName", ex.getFieldName());
         context.put("fieldValue", ex.getFieldValue());
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                ErrorCode.RESOURCE_NOT_FOUND.getCode(),
+                "Resource Not Found",
+                ex.getMessage()
+        );
+        errorDetails.setContext(context);
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.NOT_FOUND.value())
-                .errorCode(ErrorCode.RESOURCE_NOT_FOUND.getCode())
-                .error("Resource Not Found")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
                 .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
-                .context(context)
-                .stackTrace(includeStackTrace ? getStackTrace(ex) : null)
+                .path(request.getRequestURI())
                 .build();
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     /**
@@ -158,7 +175,7 @@ public class GlobalExceptionHandler {
      * Returns 400 Bad Request for point-related business logic failures.
      */
     @ExceptionHandler(InsufficientPointsException.class)
-    public ResponseEntity<ErrorResponse> handleInsufficientPointsException(
+    public ResponseEntity<ApiResponse<Object>> handleInsufficientPointsException(
             InsufficientPointsException ex,
             HttpServletRequest request
     ) {
@@ -168,19 +185,23 @@ public class GlobalExceptionHandler {
         context.put("requiredPoints", ex.getRequiredPoints());
         context.put("availablePoints", ex.getAvailablePoints());
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                ErrorCode.INSUFFICIENT_POINTS.getCode(),
+                "Insufficient Points",
+                ex.getMessage()
+        );
+        errorDetails.setContext(context);
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .errorCode(ErrorCode.INSUFFICIENT_POINTS.getCode())
-                .error("Insufficient Points")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
                 .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
-                .context(context)
-                .stackTrace(includeStackTrace ? getStackTrace(ex) : null)
+                .path(request.getRequestURI())
                 .build();
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     /**
@@ -188,7 +209,7 @@ public class GlobalExceptionHandler {
      * Returns 400 Bad Request for invalid or expired tokens.
      */
     @ExceptionHandler({InvalidPasswordResetTokenException.class, PasswordResetTokenExpiredException.class})
-    public ResponseEntity<ErrorResponse> handlePasswordResetTokenException(
+    public ResponseEntity<ApiResponse<Object>> handlePasswordResetTokenException(
             RuntimeException ex,
             HttpServletRequest request
     ) {
@@ -198,18 +219,22 @@ public class GlobalExceptionHandler {
                 ? ErrorCode.INVALID_PASSWORD_RESET_TOKEN
                 : ErrorCode.PASSWORD_RESET_TOKEN_EXPIRED;
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                errorCode.getCode(),
+                "Invalid Token",
+                ex.getMessage()
+        );
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .errorCode(errorCode.getCode())
-                .error("Invalid Token")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
                 .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
-                .stackTrace(includeStackTrace ? getStackTrace(ex) : null)
+                .path(request.getRequestURI())
                 .build();
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     /**
@@ -217,7 +242,7 @@ public class GlobalExceptionHandler {
      * Returns 409 Conflict for email duplication or voucher exchange conflicts.
      */
     @ExceptionHandler({EmailAlreadyExistsException.class, VoucherAlreadyExchangedException.class, DuplicateRegistrationException.class})
-    public ResponseEntity<ErrorResponse> handleConflictException(
+    public ResponseEntity<ApiResponse<Object>> handleConflictException(
             RuntimeException ex,
             HttpServletRequest request
     ) {
@@ -232,18 +257,22 @@ public class GlobalExceptionHandler {
             errorCode = ErrorCode.DUPLICATE_REGISTRATION;
         }
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                errorCode.getCode(),
+                "Resource Conflict",
+                ex.getMessage()
+        );
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.CONFLICT.value())
-                .errorCode(errorCode.getCode())
-                .error("Resource Conflict")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
                 .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
-                .stackTrace(includeStackTrace ? getStackTrace(ex) : null)
+                .path(request.getRequestURI())
                 .build();
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     /**
@@ -251,24 +280,28 @@ public class GlobalExceptionHandler {
      * Returns 400 Bad Request for expired vouchers.
      */
     @ExceptionHandler(VoucherExpiredException.class)
-    public ResponseEntity<ErrorResponse> handleVoucherExpiredException(
+    public ResponseEntity<ApiResponse<Object>> handleVoucherExpiredException(
             VoucherExpiredException ex,
             HttpServletRequest request
     ) {
         logException(ex, request, HttpStatus.BAD_REQUEST);
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                ErrorCode.VOUCHER_EXPIRED.getCode(),
+                "Voucher Expired",
+                ex.getMessage()
+        );
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .errorCode(ErrorCode.VOUCHER_EXPIRED.getCode())
-                .error("Voucher Expired")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
                 .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
-                .stackTrace(includeStackTrace ? getStackTrace(ex) : null)
+                .path(request.getRequestURI())
                 .build();
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     /**
@@ -276,24 +309,28 @@ public class GlobalExceptionHandler {
      * Returns 500 Internal Server Error for file operations.
      */
     @ExceptionHandler(FileStorageException.class)
-    public ResponseEntity<ErrorResponse> handleFileStorageException(
+    public ResponseEntity<ApiResponse<Object>> handleFileStorageException(
             FileStorageException ex,
             HttpServletRequest request
     ) {
         logException(ex, request, HttpStatus.INTERNAL_SERVER_ERROR);
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                ErrorCode.FILE_STORAGE_ERROR.getCode(),
+                "File Storage Error",
+                ex.getMessage()
+        );
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .errorCode(ErrorCode.FILE_STORAGE_ERROR.getCode())
-                .error("File Storage Error")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
                 .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
-                .stackTrace(includeStackTrace ? getStackTrace(ex) : null)
+                .path(request.getRequestURI())
                 .build();
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
     /**
@@ -301,24 +338,28 @@ public class GlobalExceptionHandler {
      * Returns 400 Bad Request for invalid file paths.
      */
     @ExceptionHandler(InvalidFilePathException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidFilePathException(
+    public ResponseEntity<ApiResponse<Object>> handleInvalidFilePathException(
             InvalidFilePathException ex,
             HttpServletRequest request
     ) {
         logException(ex, request, HttpStatus.BAD_REQUEST);
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                ErrorCode.INVALID_FILE_PATH.getCode(),
+                "Invalid File Path",
+                ex.getMessage()
+        );
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .errorCode(ErrorCode.INVALID_FILE_PATH.getCode())
-                .error("Invalid File Path")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
                 .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
-                .stackTrace(includeStackTrace ? getStackTrace(ex) : null)
+                .path(request.getRequestURI())
                 .build();
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     /**
@@ -326,24 +367,28 @@ public class GlobalExceptionHandler {
      * Returns 400 Bad Request for invalid input.
      */
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
+    public ResponseEntity<ApiResponse<Object>> handleIllegalArgumentException(
             IllegalArgumentException ex,
             HttpServletRequest request
     ) {
         logException(ex, request, HttpStatus.BAD_REQUEST);
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                ErrorCode.INVALID_INPUT.getCode(),
+                "Bad Request",
+                ex.getMessage()
+        );
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .errorCode(ErrorCode.INVALID_INPUT.getCode())
-                .error("Bad Request")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
                 .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
-                .stackTrace(includeStackTrace ? getStackTrace(ex) : null)
+                .path(request.getRequestURI())
                 .build();
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     /**
@@ -351,24 +396,28 @@ public class GlobalExceptionHandler {
      * Returns 500 Internal Server Error for unexpected runtime errors.
      */
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponse> handleRuntimeException(
+    public ResponseEntity<ApiResponse<Object>> handleRuntimeException(
             RuntimeException ex,
             HttpServletRequest request
     ) {
         logException(ex, request, HttpStatus.INTERNAL_SERVER_ERROR);
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                ErrorCode.INTERNAL_SERVER_ERROR.getCode(),
+                "Runtime Error",
+                "A runtime error occurred: " + ex.getMessage()
+        );
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .errorCode(ErrorCode.INTERNAL_SERVER_ERROR.getCode())
-                .error("Runtime Error")
-                .message("A runtime error occurred: " + ex.getMessage())
-                .path(request.getRequestURI())
                 .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
-                .stackTrace(includeStackTrace ? getStackTrace(ex) : null)
+                .path(request.getRequestURI())
                 .build();
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
     /**
@@ -376,24 +425,28 @@ public class GlobalExceptionHandler {
      * Returns 500 Internal Server Error for unexpected errors.
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(
+    public ResponseEntity<ApiResponse<Object>> handleGlobalException(
             Exception ex,
             HttpServletRequest request
     ) {
         logException(ex, request, HttpStatus.INTERNAL_SERVER_ERROR);
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                ErrorCode.INTERNAL_SERVER_ERROR.getCode(),
+                "Internal Server Error",
+                "An unexpected error occurred"
+        );
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .errorCode(ErrorCode.INTERNAL_SERVER_ERROR.getCode())
-                .error("Internal Server Error")
-                .message("An unexpected error occurred")
-                .path(request.getRequestURI())
                 .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
-                .stackTrace(includeStackTrace ? getStackTrace(ex) : null)
+                .path(request.getRequestURI())
                 .build();
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
     /**
