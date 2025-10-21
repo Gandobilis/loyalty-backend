@@ -1,11 +1,17 @@
 package com.multi.loyaltybackend.exception;
 
-public class InvalidPasswordResetTokenException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+/**
+ * Exception thrown when an invalid password reset token is provided.
+ */
+public class InvalidPasswordResetTokenException extends BaseException {
+
     public InvalidPasswordResetTokenException() {
-        super("Invalid password reset token.");
+        super(ErrorCode.INVALID_PASSWORD_RESET_TOKEN, HttpStatus.BAD_REQUEST, "Invalid password reset token.");
     }
 
     public InvalidPasswordResetTokenException(String message) {
-        super(message);
+        super(ErrorCode.INVALID_PASSWORD_RESET_TOKEN, HttpStatus.BAD_REQUEST, message);
     }
 }

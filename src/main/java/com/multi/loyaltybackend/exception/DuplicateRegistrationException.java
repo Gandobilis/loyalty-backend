@@ -1,8 +1,13 @@
 package com.multi.loyaltybackend.exception;
 
-public class DuplicateRegistrationException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+/**
+ * Exception thrown when attempting to register for an event twice.
+ */
+public class DuplicateRegistrationException extends BaseException {
 
     public DuplicateRegistrationException(String message) {
-        super(message);
+        super(ErrorCode.DUPLICATE_REGISTRATION, HttpStatus.CONFLICT, message);
     }
 }
