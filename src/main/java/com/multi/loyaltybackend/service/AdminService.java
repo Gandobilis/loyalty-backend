@@ -2,6 +2,7 @@ package com.multi.loyaltybackend.service;
 
 import com.multi.loyaltybackend.company.repository.CompanyRepository;
 import com.multi.loyaltybackend.dto.DashboardStatsDTO;
+import com.multi.loyaltybackend.dto.UserFormDTO;
 import com.multi.loyaltybackend.dto.UserManagementDTO;
 import com.multi.loyaltybackend.exception.UserNotFoundException;
 import com.multi.loyaltybackend.model.Role;
@@ -12,6 +13,7 @@ import com.multi.loyaltybackend.repository.UserRepository;
 import com.multi.loyaltybackend.voucher.repository.UserVoucherRepository;
 import com.multi.loyaltybackend.voucher.repository.VoucherRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,7 @@ public class AdminService {
     private final EventRepository eventRepository;
     private final RegistrationRepository registrationRepository;
     private final UserVoucherRepository userVoucherRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Get dashboard statistics
@@ -123,6 +126,67 @@ public class AdminService {
         user.setTotalPoints(newPoints);
         User updatedUser = userRepository.save(user);
         return convertToUserManagementDTO(updatedUser);
+    }
+
+    /**
+     * Create a new user
+     */
+    @Transactional
+    public User createUser(UserFormDTO userFormDTO) {
+        // Check if email already exists
+        if (userRepository.findByEmail(userFormDTO.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+
+        User user = User.builder()
+                .email(userFormDTO.getEmail())
+                .password(userFormDTO.getPassword() != null && !userFormDTO.getPassword().isEmpty()
+                    ? passwordEncoder.encode(userFormDTO.getPassword())
+                    : null)
+                .fullName(userFormDTO.getFullName())
+                .age(userFormDTO.getAge())
+                .mobileNumber(userFormDTO.getMobileNumber())
+                .totalPoints(userFormDTO.getTotalPoints() != null ? userFormDTO.getTotalPoints() : 0)
+                .eventCount(userFormDTO.getEventCount() != null ? userFormDTO.getEventCount() : 0)
+                .workingHours(userFormDTO.getWorkingHours() != null ? userFormDTO.getWorkingHours() : 0)
+                .aboutMe(userFormDTO.getAboutMe())
+                .role(userFormDTO.getRole() != null ? userFormDTO.getRole() : Role.USER)
+                .build();
+
+        return userRepository.save(user);
+    }
+
+    /**
+     * Update an existing user
+     */
+    @Transactional
+    public User updateUser(Long userId, UserFormDTO userFormDTO) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+
+        // Check if email is being changed and if it already exists
+        if (!user.getEmail().equals(userFormDTO.getEmail())) {
+            if (userRepository.findByEmail(userFormDTO.getEmail()).isPresent()) {
+                throw new IllegalArgumentException("Email already exists");
+            }
+            user.setEmail(userFormDTO.getEmail());
+        }
+
+        // Only update password if a new one is provided
+        if (userFormDTO.getPassword() != null && !userFormDTO.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(userFormDTO.getPassword()));
+        }
+
+        user.setFullName(userFormDTO.getFullName());
+        user.setAge(userFormDTO.getAge());
+        user.setMobileNumber(userFormDTO.getMobileNumber());
+        user.setTotalPoints(userFormDTO.getTotalPoints() != null ? userFormDTO.getTotalPoints() : 0);
+        user.setEventCount(userFormDTO.getEventCount() != null ? userFormDTO.getEventCount() : 0);
+        user.setWorkingHours(userFormDTO.getWorkingHours() != null ? userFormDTO.getWorkingHours() : 0);
+        user.setAboutMe(userFormDTO.getAboutMe());
+        user.setRole(userFormDTO.getRole() != null ? userFormDTO.getRole() : Role.USER);
+
+        return userRepository.save(user);
     }
 
     /**

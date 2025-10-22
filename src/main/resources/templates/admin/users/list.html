@@ -20,6 +20,10 @@
 
             <h2>Users Management</h2>
 
+            <div style="margin-bottom: 1rem;">
+                <a th:href="@{/admin/users/new}" class="btn btn-primary">+ New User</a>
+            </div>
+
             <div class="card">
                 <table class="table">
                     <thead>
@@ -31,11 +35,12 @@
                             <th>Points</th>
                             <th>Events</th>
                             <th>Created At</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:if="${users.isEmpty()}">
-                            <td colspan="7" style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                            <td colspan="8" style="text-align: center; padding: 2rem; color: #7f8c8d;">
                                 No users found.
                             </td>
                         </tr>
@@ -52,6 +57,14 @@
                             <td th:text="${user.totalPoints}">100</td>
                             <td th:text="${user.eventCount}">5</td>
                             <td th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd')}">2024-01-01</td>
+                            <td>
+                                <a th:href="@{/admin/users/edit/{id}(id=${user.id})}" class="btn btn-sm btn-primary">Edit</a>
+                                <form th:action="@{/admin/users/delete/{id}(id=${user.id})}" method="post"
+                                      style="display: inline;"
+                                      onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
