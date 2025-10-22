@@ -1,5 +1,6 @@
 package com.multi.loyaltybackend.service;
 
+import com.multi.loyaltybackend.dto.RegisterRequest;
 import com.multi.loyaltybackend.exception.*;
 import com.multi.loyaltybackend.model.PasswordResetCode;
 import com.multi.loyaltybackend.model.Role;
@@ -42,17 +43,17 @@ public class AuthService {
         this.passwordResetCodeRepository = passwordResetCodeRepository;
     }
 
-    public void register(User request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new EmailAlreadyExistsException(request.getEmail());
+    public void register(RegisterRequest request) {
+        if (userRepository.existsByEmail(request.email())) {
+            throw new EmailAlreadyExistsException(request.email());
         }
 
 
         User user = User.builder()
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole() == null ? Role.USER : request.getRole())
-                .fullName(request.getFullName())
+                .email(request.email())
+                .password(passwordEncoder.encode(request.password()))
+                .role(request.role() == null ? Role.USER : request.role())
+                .fullName(request.fullName())
                 .build();
 
         userRepository.save(user);
