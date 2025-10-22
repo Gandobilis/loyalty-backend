@@ -1,0 +1,60 @@
+name: Auto Version Increment
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths-ignore:
+      - '.github/**'
+      - 'README.md'
+      - 'docs/**'
+
+jobs:
+  increment-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install xmlstarlet
+        run: sudo apt-get update && sudo apt-get install -y xmlstarlet
+
+      - name: Increment version
+        id: increment
+        run: |
+          chmod +x .github/scripts/increment-version.sh
+          .github/scripts/increment-version.sh
+
+      - name: Commit and push version change
+        run: |
+          if git diff --quiet pom.xml; then
+            echo "No version changes to commit"
+          else
+            git add pom.xml
+            git commit -m "chore: bump version to $(xmlstarlet sel -t -v '/_:project/_:version' pom.xml) [skip ci]"
+            git push
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Git Tag
+        run: |
+          VERSION=$(xmlstarlet sel -t -v '/_:project/_:version' pom.xml | sed 's/-SNAPSHOT//')
+          if ! git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            git tag "v$VERSION"
+            git push origin "v$VERSION"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
