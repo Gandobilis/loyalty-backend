@@ -1,13 +1,10 @@
 package com.multi.loyaltybackend.controller;
 
 import com.multi.loyaltybackend.dto.*;
-import com.multi.loyaltybackend.dto.AuthRequest;
-import com.multi.loyaltybackend.dto.PasswordResetRequest;
-import com.multi.loyaltybackend.dto.PasswordUpdateRequest;
-import com.multi.loyaltybackend.dto.RegisterRequest;
-import com.multi.loyaltybackend.model.User;
 import com.multi.loyaltybackend.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,19 +21,16 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
-        User user = User.builder()
-                .email(request.email())
-                .password(request.password())
-                .role(request.role())
-                .fullName(request.fullName())
-                .build();
-        authService.register(user);
-        return ResponseEntity.ok("User registered successfully!");
+    public ResponseEntity<Map<String, String>> register(@Valid @RequestBody RegisterRequest request) {
+        authService.register(request);
+        String token = authService.login(request.email(), request.password());
+        Map<String, String> response = new HashMap<>();
+        response.put("token", token);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<Map<String, String>> login(@Valid @RequestBody AuthRequest request) {
         String token = authService.login(request.email(), request.password());
         Map<String, String> response = new HashMap<>();
         response.put("token", token);
@@ -63,6 +57,29 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestBody PasswordUpdateRequest request) {
         authService.resetPassword(request.token(), request.newPassword());
+        return ResponseEntity.ok("Password has been reset successfully.");
+    }
+
+    // New code-based password reset endpoints
+
+    @PostMapping("/forget-password-code")
+    public ResponseEntity<String> forgetPasswordWithCode(@Valid @RequestBody PasswordResetRequest request) {
+        authService.initiatePasswordResetWithCode(request.email());
+        return ResponseEntity.ok("Password reset code sent to your email.");
+    }
+
+    @PostMapping("/verify-reset-code")
+    public ResponseEntity<Map<String, Object>> verifyResetCode(@Valid @RequestBody VerifyResetCodeRequest request) {
+        boolean isValid = authService.verifyResetCode(request.email(), request.code());
+        Map<String, Object> response = new HashMap<>();
+        response.put("valid", isValid);
+        response.put("message", "Reset code is valid");
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reset-password-code")
+    public ResponseEntity<String> resetPasswordWithCode(@Valid @RequestBody PasswordResetCodeRequest request) {
+        authService.resetPasswordWithCode(request.email(), request.code(), request.newPassword());
         return ResponseEntity.ok("Password has been reset successfully.");
     }
 }

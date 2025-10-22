@@ -27,6 +27,8 @@ public enum ErrorCode {
     INVALID_TOKEN("INVALID_TOKEN", "Invalid or expired token"),
     INVALID_PASSWORD_RESET_TOKEN("INVALID_PASSWORD_RESET_TOKEN", "Invalid password reset token"),
     PASSWORD_RESET_TOKEN_EXPIRED("PASSWORD_RESET_TOKEN_EXPIRED", "Password reset token has expired"),
+    INVALID_PASSWORD_RESET_CODE("INVALID_PASSWORD_RESET_CODE", "Invalid password reset code"),
+    PASSWORD_RESET_CODE_EXPIRED("PASSWORD_RESET_CODE_EXPIRED", "Password reset code has expired"),
     UNAUTHORIZED_ACCESS("UNAUTHORIZED_ACCESS", "Unauthorized access to resource"),
 
     // Validation Errors (400)
