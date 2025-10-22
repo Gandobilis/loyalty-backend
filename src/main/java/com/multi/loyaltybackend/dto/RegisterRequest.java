@@ -17,7 +17,12 @@ public record RegisterRequest(
         String fullName,
 
         @NotBlank(message = "Password cannot be empty")
-        @Size(min = 8, message = "Password must be at least 8 characters long")
+        @Size(min = 8, max = 128, message = "Password must be between 8 and 128 characters")
         String password
 ) {
+    public RegisterRequest {
+        if (role == null) {
+            role = Role.USER;
+        }
+    }
 }

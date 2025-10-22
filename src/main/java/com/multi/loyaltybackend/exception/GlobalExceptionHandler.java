@@ -238,6 +238,39 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles password reset code errors.
+     * Returns 400 Bad Request for invalid or expired codes.
+     */
+    @ExceptionHandler({InvalidPasswordResetCodeException.class, PasswordResetCodeExpiredException.class})
+    public ResponseEntity<ApiResponse<Object>> handlePasswordResetCodeException(
+            RuntimeException ex,
+            HttpServletRequest request
+    ) {
+        logException(ex, request, HttpStatus.BAD_REQUEST);
+
+        ErrorCode errorCode = ex instanceof InvalidPasswordResetCodeException
+                ? ErrorCode.INVALID_PASSWORD_RESET_CODE
+                : ErrorCode.PASSWORD_RESET_CODE_EXPIRED;
+
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                errorCode.getCode(),
+                "Invalid Code",
+                ex.getMessage()
+        );
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
+                .timestamp(LocalDateTime.now())
+                .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    /**
      * Handles duplicate resource conflicts.
      * Returns 409 Conflict for email duplication or voucher exchange conflicts.
      */
