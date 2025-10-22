@@ -502,8 +502,7 @@ public class GlobalExceptionHandler {
         if (status.is5xxServerError()) {
             log.error(
                     "Server error occurred - Method: {}, Path: {}, Status: {}, ErrorCode: {}, CorrelationId: {}, Message: {}",
-                    method, path, status.value(), errorCode, correlationId, ex.getMessage(),
-                    ex
+                    method, path, status.value(), errorCode, correlationId, ex.getMessage()
             );
         } else if (status.is4xxClientError()) {
             log.warn(
