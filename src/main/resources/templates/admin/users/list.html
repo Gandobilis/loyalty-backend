@@ -24,6 +24,49 @@
                 <a th:href="@{/admin/users/new}" class="btn btn-primary">+ New User</a>
             </div>
 
+            <!-- Filter Form -->
+            <div class="card" style="margin-bottom: 1rem;">
+                <h3 style="margin-bottom: 1rem;">Filter Users</h3>
+                <form th:action="@{/admin/users}" method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div>
+                        <label for="email">Email:</label>
+                        <input type="text" id="email" name="email" th:value="${filter?.email}" placeholder="Search by email...">
+                    </div>
+                    <div>
+                        <label for="fullName">Full Name:</label>
+                        <input type="text" id="fullName" name="fullName" th:value="${filter?.fullName}" placeholder="Search by name...">
+                    </div>
+                    <div>
+                        <label for="role">Role:</label>
+                        <select id="role" name="role">
+                            <option value="">All Roles</option>
+                            <option value="USER" th:selected="${filter?.role == 'USER'}">USER</option>
+                            <option value="ADMIN" th:selected="${filter?.role == 'ADMIN'}">ADMIN</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="minPoints">Min Points:</label>
+                        <input type="number" id="minPoints" name="minPoints" th:value="${filter?.minPoints}" placeholder="0">
+                    </div>
+                    <div>
+                        <label for="maxPoints">Max Points:</label>
+                        <input type="number" id="maxPoints" name="maxPoints" th:value="${filter?.maxPoints}" placeholder="1000">
+                    </div>
+                    <div>
+                        <label for="createdFrom">Created From:</label>
+                        <input type="date" id="createdFrom" name="createdFrom" th:value="${filter?.createdFrom}">
+                    </div>
+                    <div>
+                        <label for="createdTo">Created To:</label>
+                        <input type="date" id="createdTo" name="createdTo" th:value="${filter?.createdTo}">
+                    </div>
+                    <div style="display: flex; align-items: flex-end; gap: 0.5rem;">
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                        <a th:href="@{/admin/users}" class="btn" style="background-color: #95a5a6;">Clear</a>
+                    </div>
+                </form>
+            </div>
+
             <div class="card">
                 <table class="table">
                     <thead>
@@ -68,6 +111,25 @@
                         </tr>
                     </tbody>
                 </table>
+
+                <!-- Pagination -->
+                <div th:if="${totalPages > 0}" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ecf0f1;">
+                    <div>
+                        <span>Showing page <strong th:text="${currentPage + 1}">1</strong> of <strong th:text="${totalPages}">1</strong></span>
+                        <span style="margin-left: 1rem;">Total items: <strong th:text="${totalItems}">0</strong></span>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a th:if="${currentPage > 0}"
+                           th:href="@{/admin/users(page=${currentPage - 1}, size=${param.size != null ? param.size[0] : 10}, email=${filter?.email}, fullName=${filter?.fullName}, role=${filter?.role}, minPoints=${filter?.minPoints}, maxPoints=${filter?.maxPoints}, createdFrom=${filter?.createdFrom}, createdTo=${filter?.createdTo})}"
+                           class="btn btn-sm">Previous</a>
+                        <span th:if="${currentPage == 0}" class="btn btn-sm" style="opacity: 0.5; cursor: not-allowed;">Previous</span>
+
+                        <a th:if="${currentPage < totalPages - 1}"
+                           th:href="@{/admin/users(page=${currentPage + 1}, size=${param.size != null ? param.size[0] : 10}, email=${filter?.email}, fullName=${filter?.fullName}, role=${filter?.role}, minPoints=${filter?.minPoints}, maxPoints=${filter?.maxPoints}, createdFrom=${filter?.createdFrom}, createdTo=${filter?.createdTo})}"
+                           class="btn btn-sm">Next</a>
+                        <span th:if="${currentPage >= totalPages - 1}" class="btn btn-sm" style="opacity: 0.5; cursor: not-allowed;">Next</span>
+                    </div>
+                </div>
             </div>
         </main>
     </div>

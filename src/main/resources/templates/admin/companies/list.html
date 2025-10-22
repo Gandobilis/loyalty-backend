@@ -23,6 +23,21 @@
                 <a th:href="@{/admin/companies/new}" class="btn btn-primary">Add New Company</a>
             </div>
 
+            <!-- Filter Form -->
+            <div class="card" style="margin-bottom: 1rem;">
+                <h3 style="margin-bottom: 1rem;">Filter Companies</h3>
+                <form th:action="@{/admin/companies}" method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div>
+                        <label for="name">Company Name:</label>
+                        <input type="text" id="name" name="name" th:value="${filter?.name}" placeholder="Search by name...">
+                    </div>
+                    <div style="display: flex; align-items: flex-end; gap: 0.5rem;">
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                        <a th:href="@{/admin/companies}" class="btn" style="background-color: #95a5a6;">Clear</a>
+                    </div>
+                </form>
+            </div>
+
             <div class="card">
                 <table class="table">
                     <thead>
@@ -58,6 +73,25 @@
                         </tr>
                     </tbody>
                 </table>
+
+                <!-- Pagination -->
+                <div th:if="${totalPages > 0}" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ecf0f1;">
+                    <div>
+                        <span>Showing page <strong th:text="${currentPage + 1}">1</strong> of <strong th:text="${totalPages}">1</strong></span>
+                        <span style="margin-left: 1rem;">Total items: <strong th:text="${totalItems}">0</strong></span>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a th:if="${currentPage > 0}"
+                           th:href="@{/admin/companies(page=${currentPage - 1}, size=${param.size != null ? param.size[0] : 10}, name=${filter?.name})}"
+                           class="btn btn-sm">Previous</a>
+                        <span th:if="${currentPage == 0}" class="btn btn-sm" style="opacity: 0.5; cursor: not-allowed;">Previous</span>
+
+                        <a th:if="${currentPage < totalPages - 1}"
+                           th:href="@{/admin/companies(page=${currentPage + 1}, size=${param.size != null ? param.size[0] : 10}, name=${filter?.name})}"
+                           class="btn btn-sm">Next</a>
+                        <span th:if="${currentPage >= totalPages - 1}" class="btn btn-sm" style="opacity: 0.5; cursor: not-allowed;">Next</span>
+                    </div>
+                </div>
             </div>
         </main>
     </div>

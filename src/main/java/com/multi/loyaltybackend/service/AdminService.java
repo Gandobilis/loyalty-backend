@@ -2,6 +2,7 @@ package com.multi.loyaltybackend.service;
 
 import com.multi.loyaltybackend.company.repository.CompanyRepository;
 import com.multi.loyaltybackend.dto.DashboardStatsDTO;
+import com.multi.loyaltybackend.dto.UserFilterDTO;
 import com.multi.loyaltybackend.dto.UserFormDTO;
 import com.multi.loyaltybackend.dto.UserManagementDTO;
 import com.multi.loyaltybackend.exception.UserNotFoundException;
@@ -10,9 +11,13 @@ import com.multi.loyaltybackend.model.User;
 import com.multi.loyaltybackend.repository.EventRepository;
 import com.multi.loyaltybackend.repository.RegistrationRepository;
 import com.multi.loyaltybackend.repository.UserRepository;
+import com.multi.loyaltybackend.specification.UserSpecifications;
 import com.multi.loyaltybackend.voucher.repository.UserVoucherRepository;
 import com.multi.loyaltybackend.voucher.repository.VoucherRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,6 +89,40 @@ public class AdminService {
         return userRepository.findAll().stream()
                 .map(this::convertToUserManagementDTO)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Get filtered users with pagination
+     */
+    public Page<UserManagementDTO> getFilteredUsers(UserFilterDTO filter, Pageable pageable) {
+        Specification<User> spec = Specification.where(null);
+
+        if (filter != null) {
+            if (filter.getEmail() != null && !filter.getEmail().isEmpty()) {
+                spec = spec.and(UserSpecifications.emailContains(filter.getEmail()));
+            }
+            if (filter.getFullName() != null && !filter.getFullName().isEmpty()) {
+                spec = spec.and(UserSpecifications.fullNameContains(filter.getFullName()));
+            }
+            if (filter.getRole() != null && !filter.getRole().isEmpty()) {
+                spec = spec.and(UserSpecifications.hasRole(filter.getRole()));
+            }
+            if (filter.getMinPoints() != null) {
+                spec = spec.and(UserSpecifications.hasPointsGreaterThanOrEqual(filter.getMinPoints()));
+            }
+            if (filter.getMaxPoints() != null) {
+                spec = spec.and(UserSpecifications.hasPointsLessThanOrEqual(filter.getMaxPoints()));
+            }
+            if (filter.getCreatedFrom() != null) {
+                spec = spec.and(UserSpecifications.createdAfter(filter.getCreatedFrom().atStartOfDay()));
+            }
+            if (filter.getCreatedTo() != null) {
+                spec = spec.and(UserSpecifications.createdBefore(filter.getCreatedTo().atTime(23, 59, 59)));
+            }
+        }
+
+        Page<User> users = userRepository.findAll(spec, pageable);
+        return users.map(this::convertToUserManagementDTO);
     }
 
     /**

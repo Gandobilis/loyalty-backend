@@ -1,15 +1,22 @@
 package com.multi.loyaltybackend.controller;
 
+import com.multi.loyaltybackend.company.dto.CompanyFilterDTO;
 import com.multi.loyaltybackend.company.model.Company;
 import com.multi.loyaltybackend.company.service.CompanyService;
+import com.multi.loyaltybackend.dto.UserFilterDTO;
 import com.multi.loyaltybackend.dto.UserFormDTO;
 import com.multi.loyaltybackend.model.Role;
 import com.multi.loyaltybackend.model.User;
 import com.multi.loyaltybackend.service.AdminService;
+import com.multi.loyaltybackend.voucher.dto.VoucherFilterDTO;
 import com.multi.loyaltybackend.voucher.dto.VoucherRequest;
 import com.multi.loyaltybackend.voucher.model.Voucher;
 import com.multi.loyaltybackend.voucher.service.VoucherService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -40,8 +47,23 @@ public class AdminViewController {
      * Company Management Pages
      */
     @GetMapping("/companies")
-    public String listCompanies(Model model) {
-        model.addAttribute("companies", companyService.getAllCompanies());
+    public String listCompanies(
+            @ModelAttribute CompanyFilterDTO filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sort,
+            @RequestParam(defaultValue = "asc") String direction,
+            Model model) {
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+
+        Page<?> companiesPage = companyService.getFilteredCompanies(filter, pageable);
+
+        model.addAttribute("companies", companiesPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", companiesPage.getTotalPages());
+        model.addAttribute("totalItems", companiesPage.getTotalElements());
+        model.addAttribute("filter", filter);
         return "admin/companies/list";
     }
 
@@ -106,8 +128,24 @@ public class AdminViewController {
      * Voucher Management Pages
      */
     @GetMapping("/vouchers")
-    public String listVouchers(Model model) {
-        model.addAttribute("vouchers", voucherService.getAllVouchers());
+    public String listVouchers(
+            @ModelAttribute VoucherFilterDTO filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sort,
+            @RequestParam(defaultValue = "asc") String direction,
+            Model model) {
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+
+        Page<?> vouchersPage = voucherService.getFilteredVouchers(filter, pageable);
+
+        model.addAttribute("vouchers", vouchersPage.getContent());
+        model.addAttribute("companies", companyService.getAllCompanies());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", vouchersPage.getTotalPages());
+        model.addAttribute("totalItems", vouchersPage.getTotalElements());
+        model.addAttribute("filter", filter);
         return "admin/vouchers/list";
     }
 
@@ -192,8 +230,23 @@ public class AdminViewController {
      * User Management Pages
      */
     @GetMapping("/users")
-    public String listUsers(Model model) {
-        model.addAttribute("users", adminService.getAllUsers());
+    public String listUsers(
+            @ModelAttribute UserFilterDTO filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sort,
+            @RequestParam(defaultValue = "asc") String direction,
+            Model model) {
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+
+        Page<?> usersPage = adminService.getFilteredUsers(filter, pageable);
+
+        model.addAttribute("users", usersPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", usersPage.getTotalPages());
+        model.addAttribute("totalItems", usersPage.getTotalElements());
+        model.addAttribute("filter", filter);
         return "admin/users/list";
     }
 

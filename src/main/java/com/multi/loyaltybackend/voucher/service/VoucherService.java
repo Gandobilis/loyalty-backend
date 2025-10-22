@@ -8,14 +8,17 @@ import com.multi.loyaltybackend.model.VoucherStatus;
 import com.multi.loyaltybackend.repository.UserRepository;
 import com.multi.loyaltybackend.service.ImageStorageService;
 import com.multi.loyaltybackend.voucher.dto.UserVoucherRequest;
+import com.multi.loyaltybackend.voucher.dto.VoucherFilterDTO;
 import com.multi.loyaltybackend.voucher.dto.VoucherRequest;
 import com.multi.loyaltybackend.voucher.dto.VoucherWithCompanyDTO;
 import com.multi.loyaltybackend.voucher.model.UserVoucher;
 import com.multi.loyaltybackend.voucher.repository.UserVoucherRepository;
 import com.multi.loyaltybackend.voucher.repository.VoucherRepository;
 import com.multi.loyaltybackend.voucher.model.Voucher;
+import com.multi.loyaltybackend.voucher.specification.VoucherSpecifications;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,6 +74,59 @@ public class VoucherService {
                     return builder.build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Get filtered vouchers with pagination
+     */
+    public Page<VoucherWithCompanyDTO> getFilteredVouchers(VoucherFilterDTO filter, Pageable pageable) {
+        Specification<Voucher> spec = Specification.where(null);
+
+        if (filter != null) {
+            if (filter.getTitle() != null && !filter.getTitle().isEmpty()) {
+                spec = spec.and(VoucherSpecifications.titleContains(filter.getTitle()));
+            }
+            if (filter.getCompanyId() != null) {
+                spec = spec.and(VoucherSpecifications.hasCompanyId(filter.getCompanyId()));
+            }
+            if (filter.getMinPoints() != null) {
+                spec = spec.and(VoucherSpecifications.hasPointsGreaterThanOrEqual(filter.getMinPoints()));
+            }
+            if (filter.getMaxPoints() != null) {
+                spec = spec.and(VoucherSpecifications.hasPointsLessThanOrEqual(filter.getMaxPoints()));
+            }
+            if (filter.getExpiryFrom() != null) {
+                spec = spec.and(VoucherSpecifications.expiresAfter(filter.getExpiryFrom().atStartOfDay()));
+            }
+            if (filter.getExpiryTo() != null) {
+                spec = spec.and(VoucherSpecifications.expiresBefore(filter.getExpiryTo().atTime(23, 59, 59)));
+            }
+            if (filter.getStatus() != null && !filter.getStatus().isEmpty()) {
+                spec = spec.and(VoucherSpecifications.hasStatus(filter.getStatus()));
+            }
+        }
+
+        Page<Voucher> vouchers = voucherRepository.findAll(spec, pageable);
+        return vouchers.map(voucher -> {
+            VoucherWithCompanyDTO.VoucherWithCompanyDTOBuilder builder = VoucherWithCompanyDTO.builder()
+                    .id(voucher.getId())
+                    .title(voucher.getTitle())
+                    .points(voucher.getPoints())
+                    .expiry(voucher.getExpiry())
+                    .description(voucher.getDescription());
+
+            // Map company fields individually
+            if (voucher.getCompany() != null) {
+                Company company = voucher.getCompany();
+                builder.companyId(company.getId())
+                        .companyName(company.getName())
+                        .companyLogo(company.getLogoFileName() != null
+                                ? imageStorageService.getFilePath(company.getLogoFileName())
+                                : null);
+            }
+
+            return builder.build();
+        });
     }
 
     public Optional<VoucherWithCompanyDTO> getVoucherById(Long id) {

@@ -6,9 +6,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.multi.loyaltybackend.company.dto.CompanyFilterDTO;
 import com.multi.loyaltybackend.company.dto.CompanyResponseDTO;
 import com.multi.loyaltybackend.company.model.Company;
 import com.multi.loyaltybackend.company.repository.CompanyRepository;
+import com.multi.loyaltybackend.company.specification.CompanySpecifications;
 import com.multi.loyaltybackend.exception.CompanyNotFoundException;
 import com.multi.loyaltybackend.exception.FileStorageException;
 import com.multi.loyaltybackend.service.ImageStorageService;
@@ -19,6 +21,7 @@ import com.multi.loyaltybackend.voucher.repository.UserVoucherRepository;
 import com.multi.loyaltybackend.voucher.repository.VoucherRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -56,6 +59,33 @@ public class CompanyService {
         return companies.stream()
                 .map(company -> mapToDTO(company, vouchersByCompany.get(company.getId())))
                 .toList();
+    }
+
+    /**
+     * Get filtered companies with pagination
+     */
+    public Page<CompanyResponseDTO> getFilteredCompanies(CompanyFilterDTO filter, Pageable pageable) {
+        Specification<Company> spec = Specification.where(null);
+
+        if (filter != null && filter.getName() != null && !filter.getName().isEmpty()) {
+            spec = spec.and(CompanySpecifications.nameContains(filter.getName()));
+        }
+
+        Page<Company> companies = companyRepository.findAll(spec, pageable);
+
+        // Get all company IDs from the page
+        Set<Long> companyIds = companies.getContent().stream()
+                .map(Company::getId)
+                .collect(Collectors.toSet());
+
+        // Fetch all vouchers for these companies
+        Map<Long, List<Voucher>> vouchersByCompany = !companyIds.isEmpty()
+                ? voucherRepository.findByCompanyIdIn(companyIds)
+                    .stream()
+                    .collect(Collectors.groupingBy(v -> v.getCompany().getId()))
+                : Map.of();
+
+        return companies.map(company -> mapToDTO(company, vouchersByCompany.get(company.getId())));
     }
 
     public Optional<CompanyResponseDTO> getCompanyById(Long id) {
