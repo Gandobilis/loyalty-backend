@@ -408,7 +408,7 @@ public class AdminViewController {
         try {
             Event event = eventRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Event not found"));
-
+            System.out.println(event.getDateTime());
             EventFormDTO formDTO = EventFormDTO.builder()
                     .id(event.getId())
                     .title(event.getTitle())
