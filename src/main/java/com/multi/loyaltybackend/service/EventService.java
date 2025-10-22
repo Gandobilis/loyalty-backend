@@ -1,6 +1,7 @@
 package com.multi.loyaltybackend.service;
 
 
+import com.multi.loyaltybackend.dto.EventFilterDTO;
 import com.multi.loyaltybackend.dto.EventRequestDTO;
 import com.multi.loyaltybackend.dto.EventResponseDTO;
 import com.multi.loyaltybackend.dto.UserDTO;
@@ -9,6 +10,8 @@ import com.multi.loyaltybackend.model.Registration;
 import com.multi.loyaltybackend.repository.EventRepository; // Hypothetical
 import com.multi.loyaltybackend.repository.EventSpecifications;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,8 +55,12 @@ public class EventService {
             spec = spec.and(EventSpecifications.hasCategory(category));
         }
 
-        if (startDate != null && endDate != null) {
-            spec = spec.and(EventSpecifications.isBetweenDates(startDate, endDate));
+        if (startDate != null) {
+            spec = spec.and(EventSpecifications.dateTimeAfter(startDate.atStartOfDay()));
+        }
+
+        if (endDate != null) {
+            spec = spec.and(EventSpecifications.dateTimeBefore(endDate.atTime(23, 59, 59)));
         }
 
         List<Event> events = eventRepository.findAll(spec);
@@ -82,6 +89,51 @@ public class EventService {
 
     public void deleteEvent(Long id) {
         eventRepository.deleteById(id);
+    }
+
+    /**
+     * Get filtered events with pagination for admin panel
+     */
+    @Transactional(readOnly = true)
+    public Page<Event> getFilteredEvents(EventFilterDTO filter, Pageable pageable) {
+        Specification<Event> spec = Specification.where(null);
+
+        if (filter != null) {
+            if (filter.getTitle() != null && !filter.getTitle().isEmpty()) {
+                spec = spec.and(EventSpecifications.titleContains(filter.getTitle()));
+            }
+            if (filter.getCategory() != null && !filter.getCategory().isEmpty()) {
+                spec = spec.and(EventSpecifications.hasCategory(filter.getCategory()));
+            }
+            if (filter.getAddress() != null && !filter.getAddress().isEmpty()) {
+                spec = spec.and(EventSpecifications.addressContains(filter.getAddress()));
+            }
+            if (filter.getDateFrom() != null) {
+                spec = spec.and(EventSpecifications.dateTimeAfter(filter.getDateFrom().atStartOfDay()));
+            }
+            if (filter.getDateTo() != null) {
+                spec = spec.and(EventSpecifications.dateTimeBefore(filter.getDateTo().atTime(23, 59, 59)));
+            }
+            if (filter.getMinPoints() != null) {
+                spec = spec.and(EventSpecifications.hasPointsGreaterThanOrEqual(filter.getMinPoints()));
+            }
+            if (filter.getMaxPoints() != null) {
+                spec = spec.and(EventSpecifications.hasPointsLessThanOrEqual(filter.getMaxPoints()));
+            }
+            if (filter.getHasLocation() != null && filter.getHasLocation()) {
+                spec = spec.and(EventSpecifications.hasLocation());
+            }
+        }
+
+        return eventRepository.findAll(spec, pageable);
+    }
+
+    /**
+     * Get all events (no pagination) for admin panel
+     */
+    @Transactional(readOnly = true)
+    public List<Event> getAllEventsForAdmin() {
+        return eventRepository.findAll();
     }
 
     private Event mapRequestToEntity(EventRequestDTO request) {

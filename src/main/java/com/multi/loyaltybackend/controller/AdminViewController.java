@@ -3,11 +3,17 @@ package com.multi.loyaltybackend.controller;
 import com.multi.loyaltybackend.company.dto.CompanyFilterDTO;
 import com.multi.loyaltybackend.company.model.Company;
 import com.multi.loyaltybackend.company.service.CompanyService;
+import com.multi.loyaltybackend.dto.EventFilterDTO;
+import com.multi.loyaltybackend.dto.EventFormDTO;
 import com.multi.loyaltybackend.dto.UserFilterDTO;
 import com.multi.loyaltybackend.dto.UserFormDTO;
+import com.multi.loyaltybackend.model.Event;
+import com.multi.loyaltybackend.model.EventCategory;
 import com.multi.loyaltybackend.model.Role;
 import com.multi.loyaltybackend.model.User;
+import com.multi.loyaltybackend.repository.EventRepository;
 import com.multi.loyaltybackend.service.AdminService;
+import com.multi.loyaltybackend.service.EventService;
 import com.multi.loyaltybackend.voucher.dto.VoucherFilterDTO;
 import com.multi.loyaltybackend.voucher.dto.VoucherRequest;
 import com.multi.loyaltybackend.voucher.model.Voucher;
@@ -33,6 +39,8 @@ public class AdminViewController {
     private final AdminService adminService;
     private final CompanyService companyService;
     private final VoucherService voucherService;
+    private final EventService eventService;
+    private final EventRepository eventRepository;
 
     /**
      * Admin Dashboard - Main page with statistics
@@ -338,5 +346,126 @@ public class AdminViewController {
                 .workingHours(userDTO.getWorkingHours())
                 .role(userDTO.getRole())
                 .build();
+    }
+
+    /**
+     * Event Management Pages
+     */
+    @GetMapping("/events")
+    public String listEvents(
+            @ModelAttribute EventFilterDTO filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sort,
+            @RequestParam(defaultValue = "desc") String direction,
+            Model model) {
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+
+        Page<Event> eventsPage = eventService.getFilteredEvents(filter, pageable);
+
+        model.addAttribute("events", eventsPage.getContent());
+        model.addAttribute("categories", EventCategory.values());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", eventsPage.getTotalPages());
+        model.addAttribute("totalItems", eventsPage.getTotalElements());
+        model.addAttribute("filter", filter);
+        return "admin/events/list";
+    }
+
+    @GetMapping("/events/new")
+    public String newEventForm(Model model) {
+        model.addAttribute("event", new EventFormDTO());
+        model.addAttribute("categories", EventCategory.values());
+        return "admin/events/form";
+    }
+
+    @PostMapping("/events/new")
+    public String createEvent(@ModelAttribute EventFormDTO eventForm, RedirectAttributes redirectAttributes) {
+        try {
+            Event event = Event.builder()
+                    .title(eventForm.getTitle())
+                    .shortDescription(eventForm.getShortDescription())
+                    .description(eventForm.getDescription())
+                    .category(EventCategory.valueOf(eventForm.getCategory()))
+                    .address(eventForm.getAddress())
+                    .latitude(eventForm.getLatitude())
+                    .longitude(eventForm.getLongitude())
+                    .dateTime(eventForm.getDateTime())
+                    .points(eventForm.getPoints() != null ? eventForm.getPoints() : 0)
+                    .build();
+            eventRepository.save(event);
+            redirectAttributes.addFlashAttribute("successMessage", "Event created successfully!");
+            return "redirect:/admin/events";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error creating event: " + e.getMessage());
+            return "redirect:/admin/events/new";
+        }
+    }
+
+    @GetMapping("/events/edit/{id}")
+    public String editEventForm(@PathVariable Long id, Model model) {
+        try {
+            Event event = eventRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Event not found"));
+
+            EventFormDTO formDTO = EventFormDTO.builder()
+                    .id(event.getId())
+                    .title(event.getTitle())
+                    .shortDescription(event.getShortDescription())
+                    .description(event.getDescription())
+                    .category(event.getCategory().name())
+                    .address(event.getAddress())
+                    .latitude(event.getLatitude())
+                    .longitude(event.getLongitude())
+                    .dateTime(event.getDateTime())
+                    .points(event.getPoints())
+                    .build();
+
+            model.addAttribute("event", formDTO);
+            model.addAttribute("categories", EventCategory.values());
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Error loading event: " + e.getMessage());
+        }
+        return "admin/events/form";
+    }
+
+    @PostMapping("/events/edit/{id}")
+    public String updateEvent(
+            @PathVariable Long id,
+            @ModelAttribute EventFormDTO eventForm,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Event event = eventRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Event not found"));
+
+            event.setTitle(eventForm.getTitle());
+            event.setShortDescription(eventForm.getShortDescription());
+            event.setDescription(eventForm.getDescription());
+            event.setCategory(EventCategory.valueOf(eventForm.getCategory()));
+            event.setAddress(eventForm.getAddress());
+            event.setLatitude(eventForm.getLatitude());
+            event.setLongitude(eventForm.getLongitude());
+            event.setDateTime(eventForm.getDateTime());
+            event.setPoints(eventForm.getPoints() != null ? eventForm.getPoints() : 0);
+
+            eventRepository.save(event);
+            redirectAttributes.addFlashAttribute("successMessage", "Event updated successfully!");
+            return "redirect:/admin/events";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error updating event: " + e.getMessage());
+            return "redirect:/admin/events/edit/" + id;
+        }
+    }
+
+    @PostMapping("/events/delete/{id}")
+    public String deleteEvent(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            eventService.deleteEvent(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Event deleted successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting event: " + e.getMessage());
+        }
+        return "redirect:/admin/events";
     }
 }

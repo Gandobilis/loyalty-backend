@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${event.id != null ? 'Edit Event' : 'New Event'}">Event Form - Admin Panel</title>
+    <style th:replace="~{fragments/styles :: admin-styles}"></style>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .map-instructions {
+            background-color: #e3f2fd;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Loyalty Backend - Admin Panel</h1>
+    </div>
+
+    <div class="container">
+        <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+
+        <main class="main-content">
+            <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+            <h2 th:text="${event.id != null ? 'Edit Event' : 'New Event'}">Event Form</h2>
+
+            <div class="card">
+                <form th:action="${event.id != null ? '/admin/events/edit/' + event.id : '/admin/events/new'}"
+                      method="post" th:object="${event}">
+
+                    <div class="form-group">
+                        <label for="title">Title *</label>
+                        <input type="text" id="title" name="title" th:field="*{title}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="shortDescription">Short Description</label>
+                        <input type="text" id="shortDescription" name="shortDescription" th:field="*{shortDescription}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" th:field="*{description}" rows="5"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">Category *</label>
+                        <select id="category" name="category" th:field="*{category}" required>
+                            <option value="">Select a category</option>
+                            <option th:each="cat : ${categories}"
+                                    th:value="${cat}"
+                                    th:text="${cat}">
+                                Category
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <input type="text" id="address" name="address" th:field="*{address}"
+                               placeholder="Enter address or click on map">
+                    </div>
+
+                    <!-- Map Section -->
+                    <div class="form-group">
+                        <label>Event Location (Click on map to set)</label>
+                        <div class="map-instructions">
+                            📍 Click anywhere on the map to set the event location. You can also drag the marker to adjust the position.
+                        </div>
+                        <div id="map"></div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="latitude">Latitude</label>
+                            <input type="number" id="latitude" name="latitude" th:field="*{latitude}"
+                                   step="0.000001" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="longitude">Longitude</label>
+                            <input type="number" id="longitude" name="longitude" th:field="*{longitude}"
+                                   step="0.000001" readonly>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="dateTime">Date & Time *</label>
+                            <input type="datetime-local" id="dateTime" name="dateTime" th:field="*{dateTime}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="points">Points</label>
+                            <input type="number" id="points" name="points" th:field="*{points}" min="0" value="0">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+                        <button type="submit" class="btn btn-primary">
+                            <span th:text="${event.id != null ? 'Update Event' : 'Create Event'}">Submit</span>
+                        </button>
+                        <a th:href="@{/admin/events}" class="btn" style="background-color: #95a5a6;">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // Get initial coordinates from the form (if editing)
+        const initialLat = /*[[${event.latitude}]]*/ null;
+        const initialLng = /*[[${event.longitude}]]*/ null;
+
+        // Default center (Tbilisi, Georgia - adjust to your location)
+        const defaultLat = 41.7151;
+        const defaultLng = 44.8271;
+
+        // Initialize map
+        const map = L.map('map').setView(
+            [initialLat || defaultLat, initialLng || defaultLng],
+            initialLat ? 15 : 12
+        );
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Create marker
+        let marker = null;
+
+        // If editing and has coordinates, add marker
+        if (initialLat && initialLng) {
+            marker = L.marker([initialLat, initialLng], {draggable: true}).addTo(map);
+            updateMarkerEvents(marker);
+        }
+
+        // Click on map to add/move marker
+        map.on('click', function(e) {
+            const {lat, lng} = e.latlng;
+
+            if (marker) {
+                marker.setLatLng([lat, lng]);
+            } else {
+                marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+                updateMarkerEvents(marker);
+            }
+
+            updateCoordinates(lat, lng);
+        });
+
+        // Function to update marker drag events
+        function updateMarkerEvents(marker) {
+            marker.on('dragend', function(e) {
+                const {lat, lng} = e.target.getLatLng();
+                updateCoordinates(lat, lng);
+            });
+        }
+
+        // Function to update coordinate inputs
+        function updateCoordinates(lat, lng) {
+            document.getElementById('latitude').value = lat.toFixed(6);
+            document.getElementById('longitude').value = lng.toFixed(6);
+        }
+
+        // Optional: Geocoding on address change (requires additional API)
+        const addressInput = document.getElementById('address');
+        addressInput.addEventListener('blur', function() {
+            const address = this.value;
+            if (address && address.length > 3) {
+                // You can add geocoding here using Nominatim or another service
+                console.log('Address entered:', address);
+            }
+        });
+        /*]]>*/
+    </script>
+</body>
+</html>
