@@ -2,6 +2,9 @@ package com.multi.loyaltybackend.controller;
 
 import com.multi.loyaltybackend.company.model.Company;
 import com.multi.loyaltybackend.company.service.CompanyService;
+import com.multi.loyaltybackend.dto.UserFormDTO;
+import com.multi.loyaltybackend.model.Role;
+import com.multi.loyaltybackend.model.User;
 import com.multi.loyaltybackend.service.AdminService;
 import com.multi.loyaltybackend.voucher.dto.VoucherRequest;
 import com.multi.loyaltybackend.voucher.model.Voucher;
@@ -192,5 +195,95 @@ public class AdminViewController {
     public String listUsers(Model model) {
         model.addAttribute("users", adminService.getAllUsers());
         return "admin/users/list";
+    }
+
+    @GetMapping("/users/new")
+    public String newUserForm(Model model) {
+        model.addAttribute("user", new UserFormDTO());
+        return "admin/users/form";
+    }
+
+    @PostMapping("/users/new")
+    public String createUser(@ModelAttribute UserFormDTO userForm, RedirectAttributes redirectAttributes) {
+        try {
+            adminService.createUser(userForm);
+            redirectAttributes.addFlashAttribute("successMessage", "User created successfully!");
+            return "redirect:/admin/users";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error creating user: " + e.getMessage());
+            return "redirect:/admin/users/new";
+        }
+    }
+
+    @GetMapping("/users/edit/{id}")
+    public String editUserForm(@PathVariable Long id, Model model) {
+        try {
+            User user = adminService.getUserById(id) != null
+                    ? convertToUser(adminService.getUserById(id))
+                    : null;
+            if (user == null) {
+                model.addAttribute("errorMessage", "User not found");
+                return "admin/users/list";
+            }
+            UserFormDTO formDTO = UserFormDTO.builder()
+                    .id(user.getId())
+                    .email(user.getEmail())
+                    .fullName(user.getFullName())
+                    .age(user.getAge())
+                    .mobileNumber(user.getMobileNumber())
+                    .totalPoints(user.getTotalPoints())
+                    .eventCount(user.getEventCount())
+                    .workingHours(user.getWorkingHours())
+                    .aboutMe(user.getAboutMe())
+                    .role(user.getRole())
+                    .build();
+            model.addAttribute("user", formDTO);
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Error loading user: " + e.getMessage());
+        }
+        return "admin/users/form";
+    }
+
+    @PostMapping("/users/edit/{id}")
+    public String updateUser(
+            @PathVariable Long id,
+            @ModelAttribute UserFormDTO userForm,
+            RedirectAttributes redirectAttributes) {
+        try {
+            adminService.updateUser(id, userForm);
+            redirectAttributes.addFlashAttribute("successMessage", "User updated successfully!");
+            return "redirect:/admin/users";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error updating user: " + e.getMessage());
+            return "redirect:/admin/users/edit/" + id;
+        }
+    }
+
+    @PostMapping("/users/delete/{id}")
+    public String deleteUser(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            adminService.deleteUser(id);
+            redirectAttributes.addFlashAttribute("successMessage", "User deleted successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting user: " + e.getMessage());
+        }
+        return "redirect:/admin/users";
+    }
+
+    /**
+     * Helper method to convert UserManagementDTO to User for form editing
+     */
+    private User convertToUser(com.multi.loyaltybackend.dto.UserManagementDTO userDTO) {
+        return User.builder()
+                .id(userDTO.getId())
+                .email(userDTO.getEmail())
+                .fullName(userDTO.getFullName())
+                .age(userDTO.getAge())
+                .mobileNumber(userDTO.getMobileNumber())
+                .totalPoints(userDTO.getTotalPoints())
+                .eventCount(userDTO.getEventCount())
+                .workingHours(userDTO.getWorkingHours())
+                .role(userDTO.getRole())
+                .build();
     }
 }

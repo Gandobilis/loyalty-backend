@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${user.id != null ? 'Edit User' : 'New User'} + ' - Admin Panel'">User Form</title>
+    <style th:replace="~{fragments/styles :: admin-styles}"></style>
+</head>
+<body>
+    <div class="header">
+        <h1>Loyalty Backend - Admin Panel</h1>
+    </div>
+
+    <div class="container">
+        <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+
+        <main class="main-content">
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+            <h2 th:text="${user.id != null ? 'Edit User' : 'New User'}">User Form</h2>
+
+            <div class="card">
+                <!-- Create form -->
+                <form th:if="${user.id == null}" th:action="@{/admin/users/new}" method="post">
+                    <div class="form-group">
+                        <label for="email-new">Email *</label>
+                        <input type="email" id="email-new" name="email" th:value="${user.email}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password-new">Password *</label>
+                        <input type="password" id="password-new" name="password" minlength="8" required>
+                        <small>Minimum 8 characters</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fullName-new">Full Name *</label>
+                        <input type="text" id="fullName-new" name="fullName" th:value="${user.fullName}" required minlength="2" maxlength="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="age-new">Age</label>
+                        <input type="number" id="age-new" name="age" th:value="${user.age}" min="0" max="150">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mobileNumber-new">Mobile Number</label>
+                        <input type="tel" id="mobileNumber-new" name="mobileNumber" th:value="${user.mobileNumber}" pattern="^\+?[1-9]\d{1,14}$">
+                        <small>E.164 format (e.g., +1234567890)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="role-new">Role *</label>
+                        <select id="role-new" name="role" required>
+                            <option value="USER" th:selected="${user.role == null || user.role.name() == 'USER'}">USER</option>
+                            <option value="ADMIN" th:selected="${user.role != null && user.role.name() == 'ADMIN'}">ADMIN</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="totalPoints-new">Total Points</label>
+                        <input type="number" id="totalPoints-new" name="totalPoints" th:value="${user.totalPoints}" min="0" value="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eventCount-new">Event Count</label>
+                        <input type="number" id="eventCount-new" name="eventCount" th:value="${user.eventCount}" min="0" value="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="workingHours-new">Working Hours</label>
+                        <input type="number" id="workingHours-new" name="workingHours" th:value="${user.workingHours}" min="0" value="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="aboutMe-new">About Me</label>
+                        <textarea id="aboutMe-new" name="aboutMe" maxlength="2000" th:text="${user.aboutMe}"></textarea>
+                    </div>
+
+                    <div class="actions">
+                        <button type="submit" class="btn btn-primary">Create</button>
+                        <a th:href="@{/admin/users}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+
+                <!-- Edit form -->
+                <form th:if="${user.id != null}" th:action="@{/admin/users/edit/{id}(id=${user.id})}" method="post">
+                    <div class="form-group">
+                        <label for="email-edit">Email *</label>
+                        <input type="email" id="email-edit" name="email" th:value="${user.email}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password-edit">Password</label>
+                        <input type="password" id="password-edit" name="password" minlength="8">
+                        <small>Leave blank to keep current password</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fullName-edit">Full Name *</label>
+                        <input type="text" id="fullName-edit" name="fullName" th:value="${user.fullName}" required minlength="2" maxlength="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="age-edit">Age</label>
+                        <input type="number" id="age-edit" name="age" th:value="${user.age}" min="0" max="150">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mobileNumber-edit">Mobile Number</label>
+                        <input type="tel" id="mobileNumber-edit" name="mobileNumber" th:value="${user.mobileNumber}" pattern="^\+?[1-9]\d{1,14}$">
+                        <small>E.164 format (e.g., +1234567890)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="role-edit">Role *</label>
+                        <select id="role-edit" name="role" required>
+                            <option value="USER" th:selected="${user.role != null && user.role.name() == 'USER'}">USER</option>
+                            <option value="ADMIN" th:selected="${user.role != null && user.role.name() == 'ADMIN'}">ADMIN</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="totalPoints-edit">Total Points</label>
+                        <input type="number" id="totalPoints-edit" name="totalPoints" th:value="${user.totalPoints}" min="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eventCount-edit">Event Count</label>
+                        <input type="number" id="eventCount-edit" name="eventCount" th:value="${user.eventCount}" min="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="workingHours-edit">Working Hours</label>
+                        <input type="number" id="workingHours-edit" name="workingHours" th:value="${user.workingHours}" min="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="aboutMe-edit">About Me</label>
+                        <textarea id="aboutMe-edit" name="aboutMe" maxlength="2000" th:text="${user.aboutMe}"></textarea>
+                    </div>
+
+                    <div class="actions">
+                        <button type="submit" class="btn btn-primary">Update</button>
+                        <a th:href="@{/admin/users}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
