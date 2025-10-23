@@ -254,6 +254,7 @@ public class AdminService {
                 .age(user.getAge())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
+                .aboutMe(user.getAboutMe())
                 .build();
     }
 }

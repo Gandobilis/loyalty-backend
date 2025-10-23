@@ -249,7 +249,6 @@ public class AdminViewController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
 
         Page<?> usersPage = adminService.getFilteredUsers(filter, pageable);
-
         model.addAttribute("users", usersPage.getContent());
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", usersPage.getTotalPages());
@@ -345,6 +344,7 @@ public class AdminViewController {
                 .eventCount(userDTO.getEventCount())
                 .workingHours(userDTO.getWorkingHours())
                 .role(userDTO.getRole())
+                .aboutMe(userDTO.getAboutMe())
                 .build();
     }
 

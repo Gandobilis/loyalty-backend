@@ -24,4 +24,5 @@ public class UserManagementDTO {
     private Integer age;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String aboutMe;
 }
