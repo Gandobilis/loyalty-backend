@@ -143,7 +143,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // Allow your frontend URL
-        configuration.setAllowedOrigins(List.of(frontendUrl, "https://b7dc0bc61c94.ngrok-free.app"));
+        configuration.setAllowedOrigins(List.of(frontendUrl, "*"));
 
         // Or for multiple origins:
         // configuration.setAllowedOrigins(Arrays.asList(frontendUrl, "http://localhost:3000"));
