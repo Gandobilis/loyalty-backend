@@ -9,7 +9,7 @@
   </parent>
   <groupId>com.multi</groupId>
   <artifactId>loyalty-backend</artifactId>
-  <version>0.0.11-SNAPSHOT</version>
+  <version>0.0.12-SNAPSHOT</version>
   <name>loyalty-backend</name>
   <description>loyalty-backend</description>
   <url/>
