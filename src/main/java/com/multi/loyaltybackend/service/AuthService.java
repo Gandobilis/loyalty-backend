@@ -2,9 +2,11 @@ package com.multi.loyaltybackend.service;
 
 import com.multi.loyaltybackend.dto.RegisterRequest;
 import com.multi.loyaltybackend.exception.*;
+import com.multi.loyaltybackend.model.EmailVerificationCode;
 import com.multi.loyaltybackend.model.PasswordResetCode;
 import com.multi.loyaltybackend.model.Role;
 import com.multi.loyaltybackend.model.User;
+import com.multi.loyaltybackend.repository.EmailVerificationCodeRepository;
 import com.multi.loyaltybackend.repository.PasswordResetCodeRepository;
 import com.multi.loyaltybackend.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -28,21 +30,24 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
     private final PasswordResetCodeRepository passwordResetCodeRepository;
+    private final EmailVerificationCodeRepository emailVerificationCodeRepository;
     private final SecureRandom secureRandom = new SecureRandom();
 
     // Thread-safe set for blacklisted tokens
     // TODO: Consider using Redis with TTL for production to prevent memory leaks
     public static final Set<String> blackList = ConcurrentHashMap.newKeySet();
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager, EmailService emailService, PasswordResetCodeRepository passwordResetCodeRepository) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager, EmailService emailService, PasswordResetCodeRepository passwordResetCodeRepository, EmailVerificationCodeRepository emailVerificationCodeRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.emailService = emailService;
         this.passwordResetCodeRepository = passwordResetCodeRepository;
+        this.emailVerificationCodeRepository = emailVerificationCodeRepository;
     }
 
+    @Transactional
     public void register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new EmailAlreadyExistsException(request.email());
@@ -54,9 +59,13 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.password()))
                 .role(request.role() == null ? Role.USER : request.role())
                 .fullName(request.fullName())
+                .emailVerified(false)
                 .build();
 
         userRepository.save(user);
+
+        // Send email verification code
+        sendEmailVerificationCode(request.email());
     }
 
     public String login(String email, String password) {
@@ -187,5 +196,92 @@ public class AuthService {
     @Transactional
     public void cleanupExpiredResetCodes() {
         passwordResetCodeRepository.deleteExpiredCodes(LocalDateTime.now());
+    }
+
+    // Email Verification Methods
+
+    /**
+     * Generates a 6-digit verification code
+     */
+    private String generateVerificationCode() {
+        int code = secureRandom.nextInt(900000) + 100000; // Generates number between 100000 and 999999
+        return String.valueOf(code);
+    }
+
+    /**
+     * Sends email verification code to the user
+     */
+    @Transactional
+    public void sendEmailVerificationCode(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        // Delete any existing verification codes for this email
+        emailVerificationCodeRepository.deleteByEmail(email);
+
+        // Generate new verification code
+        String code = generateVerificationCode();
+        EmailVerificationCode verificationCode = EmailVerificationCode.builder()
+                .code(code)
+                .email(email)
+                .expiryTime(LocalDateTime.now().plusMinutes(15)) // Code expires in 15 minutes
+                .used(false)
+                .build();
+
+        emailVerificationCodeRepository.save(verificationCode);
+        emailService.sendEmailVerificationCode(email, code);
+    }
+
+    /**
+     * Verifies the email using the provided code
+     */
+    @Transactional
+    public void verifyEmail(String email, String code) {
+        EmailVerificationCode verificationCode = emailVerificationCodeRepository.findByCodeAndEmail(code, email)
+                .orElseThrow(() -> new InvalidVerificationCodeException("Invalid verification code"));
+
+        if (verificationCode.isExpired()) {
+            throw new VerificationCodeExpiredException();
+        }
+
+        if (verificationCode.isUsed()) {
+            throw new InvalidVerificationCodeException("Verification code has already been used");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        // Mark email as verified
+        user.setEmailVerified(true);
+        user.setEmailVerifiedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        // Mark code as used
+        verificationCode.setUsed(true);
+        emailVerificationCodeRepository.save(verificationCode);
+    }
+
+    /**
+     * Resends verification code if user hasn't verified their email
+     */
+    @Transactional
+    public void resendVerificationCode(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        if (user.getEmailVerified() != null && user.getEmailVerified()) {
+            throw new IllegalStateException("Email is already verified");
+        }
+
+        sendEmailVerificationCode(email);
+    }
+
+    /**
+     * Cleanup method to delete expired verification codes
+     * Should be called periodically (e.g., via scheduled task)
+     */
+    @Transactional
+    public void cleanupExpiredVerificationCodes() {
+        emailVerificationCodeRepository.deleteExpiredCodes(LocalDateTime.now());
     }
 }

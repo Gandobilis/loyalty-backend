@@ -49,6 +49,12 @@ public class User implements UserDetails {
 
     private LocalDateTime passwordResetTokenExpiry;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean emailVerified = false;
+
+    private LocalDateTime emailVerifiedAt;
+
     private String fileName;
 
     @Builder.Default
@@ -120,7 +126,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return emailVerified != null && emailVerified;
     }
 
     @PrePersist

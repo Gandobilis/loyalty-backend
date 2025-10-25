@@ -271,6 +271,39 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles email verification errors.
+     * Returns 400 Bad Request for invalid or expired verification codes.
+     */
+    @ExceptionHandler({InvalidVerificationCodeException.class, VerificationCodeExpiredException.class})
+    public ResponseEntity<ApiResponse<Object>> handleEmailVerificationException(
+            RuntimeException ex,
+            HttpServletRequest request
+    ) {
+        logException(ex, request, HttpStatus.BAD_REQUEST);
+
+        ErrorCode errorCode = ex instanceof InvalidVerificationCodeException
+                ? ErrorCode.INVALID_VERIFICATION_CODE
+                : ErrorCode.VERIFICATION_CODE_EXPIRED;
+
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                errorCode.getCode(),
+                "Verification Error",
+                ex.getMessage()
+        );
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
+                .timestamp(LocalDateTime.now())
+                .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    /**
      * Handles duplicate resource conflicts.
      * Returns 409 Conflict for email duplication or voucher exchange conflicts.
      */
