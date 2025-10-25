@@ -1,6 +1,7 @@
 package com.multi.loyaltybackend.dto;
 
 import com.multi.loyaltybackend.model.EventCategory;
+import com.multi.loyaltybackend.model.User;
 
 import java.time.LocalDateTime;
 import java.util.List;

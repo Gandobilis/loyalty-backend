@@ -6,38 +6,53 @@ import com.multi.loyaltybackend.dto.EventRequestDTO;
 import com.multi.loyaltybackend.dto.EventResponseDTO;
 import com.multi.loyaltybackend.dto.UserDTO;
 import com.multi.loyaltybackend.model.Event;
-import com.multi.loyaltybackend.model.Registration;
-import com.multi.loyaltybackend.repository.EventRepository; // Hypothetical
+import com.multi.loyaltybackend.repository.EventRepository;
 import com.multi.loyaltybackend.repository.EventSpecifications;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
+@RequiredArgsConstructor
 public class EventService {
 
     private final EventRepository eventRepository;
-    ImageStorageService imageStorageService;
+    private final ImageStorageService imageStorageService;
 
-    public EventService(EventRepository eventRepository,  ImageStorageService imageStorageService) {
-        this.eventRepository = eventRepository;
-        this.imageStorageService = imageStorageService;
-    }
-
-    public EventResponseDTO createEvent(EventRequestDTO request) {
+    public EventResponseDTO createEvent(EventRequestDTO request, MultipartFile file) {
         Event event = mapRequestToEntity(request);
         event = eventRepository.save(event);
         return mapEntityToResponse(event);
     }
 
+    public EventResponseDTO updateEvent(
+            Long id,
+            EventRequestDTO request,
+            MultipartFile file
+    ) {
+        Event existingEvent = eventRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + id));
+
+        existingEvent.setTitle(request.title());
+        existingEvent.setShortDescription(request.shortDescription());
+        existingEvent.setDescription(request.description());
+        existingEvent.setCategory(request.category());
+        existingEvent.setAddress(request.address());
+        existingEvent.setLatitude(request.latitude());
+        existingEvent.setLongitude(request.longitude());
+        existingEvent.setDateTime(request.dateTime());
+        Event updatedEvent = eventRepository.save(existingEvent);
+        return mapEntityToResponse(updatedEvent);
+    }
 
     @Transactional(readOnly = true)
     public EventResponseDTO getEventById(Long id) {
@@ -48,8 +63,12 @@ public class EventService {
 
 
     @Transactional(readOnly = true)
-    public List<EventResponseDTO> getAllEvents(String category, LocalDate startDate, LocalDate endDate) {
+    public List<EventResponseDTO> getAllEvents(String search, String category, LocalDate startDate, LocalDate endDate) {
         Specification<Event> spec = Specification.where(null);
+
+        if (search != null) {
+            spec = spec.and(EventSpecifications.searchContains(search));
+        }
 
         if (category != null) {
             spec = spec.and(EventSpecifications.hasCategory(category));
@@ -69,23 +88,6 @@ public class EventService {
                 .map(this::mapEntityToResponse)
                 .collect(Collectors.toList());
     }
-
-    public EventResponseDTO updateEvent(Long id, EventRequestDTO request) {
-        Event existingEvent = eventRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + id));
-
-        existingEvent.setTitle(request.title());
-        existingEvent.setShortDescription(request.shortDescription());
-        existingEvent.setDescription(request.description());
-        existingEvent.setCategory(request.category());
-        existingEvent.setAddress(request.address());
-        existingEvent.setLatitude(request.latitude());
-        existingEvent.setLongitude(request.longitude());
-        existingEvent.setDateTime(request.dateTime());
-        Event updatedEvent = eventRepository.save(existingEvent);
-        return mapEntityToResponse(updatedEvent);
-    }
-
 
     public void deleteEvent(Long id) {
         eventRepository.deleteById(id);

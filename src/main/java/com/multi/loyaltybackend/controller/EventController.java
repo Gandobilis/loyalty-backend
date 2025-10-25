@@ -1,31 +1,60 @@
 package com.multi.loyaltybackend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.multi.loyaltybackend.company.model.Company;
 import com.multi.loyaltybackend.dto.EventRequestDTO;
 import com.multi.loyaltybackend.dto.EventResponseDTO;
+import com.multi.loyaltybackend.model.Event;
 import com.multi.loyaltybackend.service.EventService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/events")
+@RequiredArgsConstructor
 public class EventController {
 
     private final EventService eventService;
 
-    public EventController(EventService eventService) {
-        this.eventService = eventService;
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<EventResponseDTO> createEvent(
+            @RequestParam("event") String eventJson,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            EventRequestDTO event = objectMapper.readValue(eventJson, EventRequestDTO.class);
+            EventResponseDTO created = eventService.createEvent(event, file);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
-    @PostMapping
-    public ResponseEntity<EventResponseDTO> createEvent(@Valid @RequestBody EventRequestDTO request) {
-        EventResponseDTO response = eventService.createEvent(request);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+
+    @PutMapping(value =  "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<EventResponseDTO> updateEvent(
+            @PathVariable Long id,
+            @RequestParam("event") String eventJson,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            EventRequestDTO event = objectMapper.readValue(eventJson, EventRequestDTO.class);
+            EventResponseDTO updated = eventService.updateEvent(id, event, file);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @GetMapping("/{id}")
@@ -36,17 +65,12 @@ public class EventController {
 
     @GetMapping
     public ResponseEntity<List<EventResponseDTO>> getAllEvents(
+            @RequestParam(required = false) String search,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
-        List<EventResponseDTO> response = eventService.getAllEvents(category, startDate, endDate);
-        return ResponseEntity.ok(response);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<EventResponseDTO> updateEvent(@PathVariable Long id, @Valid @RequestBody EventRequestDTO request) {
-        EventResponseDTO response = eventService.updateEvent(id, request);
+        List<EventResponseDTO> response = eventService.getAllEvents(search, category, startDate, endDate);
         return ResponseEntity.ok(response);
     }
 

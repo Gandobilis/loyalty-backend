@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -59,9 +60,22 @@ public class VoucherController {
     }
 
     @PostMapping("/exchange")
-    public ResponseEntity<UserVoucher> exchangeVoucher(@Valid @RequestBody UserVoucherRequest request) {
+    public ResponseEntity<UserVoucher> exchangeVoucher(
+            Authentication authentication,
+            @Valid @RequestBody UserVoucherRequest request) {
         UserVoucher created = voucherService.exchangeVoucher(
-                request.getUserId(),
+                authentication.getName(),
+                request.getVoucherId()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PostMapping("/redeem")
+    public ResponseEntity<UserVoucher> redeemVoucher(
+            Authentication authentication,
+            @Valid @RequestBody UserVoucherRequest request) {
+        UserVoucher created = voucherService.redeemVoucher(
+                authentication.getName(),
                 request.getVoucherId()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(created);

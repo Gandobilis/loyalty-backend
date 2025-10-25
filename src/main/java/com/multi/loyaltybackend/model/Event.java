@@ -83,14 +83,4 @@ public class Event {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    public void addRegistration(Registration registration) {
-        users.add(registration);
-        registration.setEvent(this);
-    }
-
-    public void removeRegistration(Registration registration) {
-        users.remove(registration);
-        registration.setEvent(null);
-    }
 }

@@ -4,7 +4,6 @@ import com.multi.loyaltybackend.model.Event;
 import com.multi.loyaltybackend.model.EventCategory;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class EventSpecifications {
@@ -33,6 +32,41 @@ public class EventSpecifications {
                 return criteriaBuilder.conjunction();
             }
             return criteriaBuilder.like(criteriaBuilder.lower(root.get("address")), "%" + address.toLowerCase() + "%");
+        };
+    }
+
+    public static Specification<Event> shortDescriptionContains(String shortDescription) {
+        return (root, query, criteriaBuilder) -> {
+            if (shortDescription == null || shortDescription.isEmpty()) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.like(criteriaBuilder.lower(root.get("shortDescription")), "%" + shortDescription.toLowerCase() + "%");
+        };
+    }
+
+    public static Specification<Event> descriptionContains(String description) {
+        return (root, query, criteriaBuilder) -> {
+            if (description == null || description.isEmpty()) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), "%" + description.toLowerCase() + "%");
+        };
+    }
+
+    public static Specification<Event> searchContains(String search) {
+        return (root, query, criteriaBuilder) -> {
+            if (search == null || search.isEmpty()) {
+                return criteriaBuilder.conjunction();
+            }
+
+            String searchPattern = "%" + search.toLowerCase() + "%";
+
+            return criteriaBuilder.or(
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), searchPattern),
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("address")), searchPattern),
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("shortDescription")), searchPattern),
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), searchPattern)
+            );
         };
     }
 
