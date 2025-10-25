@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrations - Admin Panel</title>
+    <style th:replace="~{fragments/styles :: admin-styles}"></style>
+    <style>
+        .bulk-actions-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: none;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .bulk-actions-bar.active {
+            display: flex;
+        }
+
+        .bulk-actions-bar .selected-count {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .bulk-actions-bar button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .bulk-actions-bar button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .bulk-actions-bar button.btn-approve {
+            background: #27ae60;
+            color: white;
+        }
+
+        .bulk-actions-bar button.btn-complete {
+            background: #3498db;
+            color: white;
+        }
+
+        .bulk-actions-bar button.btn-cancel {
+            background: #f39c12;
+            color: white;
+        }
+
+        .bulk-actions-bar button.btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .checkbox-cell {
+            width: 40px;
+            text-align: center;
+        }
+
+        .checkbox-cell input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .event-title-link {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid transparent;
+        }
+
+        .event-title-link:hover {
+            color: #2980b9;
+            border-bottom: 1px solid #2980b9;
+            text-decoration: none;
+        }
+
+        .rows-per-page {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .rows-per-page select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-registered {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .badge-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        table thead tr th {
+            padding: 1rem 0.75rem;
+            background: #34495e;
+            color: white;
+            font-weight: 600;
+            text-align: left;
+            border-bottom: 3px solid #2c3e50;
+        }
+
+        table tbody tr {
+            transition: all 0.3s ease;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        table tbody tr:hover {
+            background: linear-gradient(to right, #f8f9fa 0%, #e8f4f8 100%);
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table tbody tr td {
+            padding: 1rem 0.75rem;
+            vertical-align: middle;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 0.4rem 0.7rem;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-small:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Loyalty Backend - Admin Panel</h1>
+</div>
+
+<div class="container">
+    <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2>Event Registrations</h2>
+            <div class="rows-per-page">
+                <label for="rowsPerPage">Rows per page:</label>
+                <select id="rowsPerPage" onchange="changeRowsPerPage(this.value)">
+                    <option th:selected="${param.size == null || param.size[0] == '10'}" value="10">10</option>
+                    <option th:selected="${param.size != null && param.size[0] == '25'}" value="25">25</option>
+                    <option th:selected="${param.size != null && param.size[0] == '50'}" value="50">50</option>
+                    <option th:selected="${param.size != null && param.size[0] == '100'}" value="100">100</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Bulk Actions Bar -->
+        <div id="bulkActionsBar" class="bulk-actions-bar">
+            <span class="selected-count"><span id="selectedCount">0</span> selected</span>
+            <button type="button" class="btn-approve" onclick="bulkAction('approve')">✓ Approve Selected</button>
+            <button type="button" class="btn-complete" onclick="bulkAction('complete')">✓ Complete Selected</button>
+            <button type="button" class="btn-cancel" onclick="bulkAction('cancel')">✗ Cancel Selected</button>
+            <button type="button" class="btn-delete" onclick="bulkAction('delete')">🗑 Delete Selected</button>
+            <button type="button" onclick="clearSelection()" style="margin-left: auto;">Clear Selection</button>
+        </div>
+
+        <!-- Filter Form -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <h3 style="margin-top: 0;">Filters</h3>
+            <form th:action="@{/admin/registrations}" method="get" th:object="${filter}">
+                <!-- Hidden field to preserve page size -->
+                <input type="hidden" name="size" th:value="${param.size != null ? param.size[0] : 10}">
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="form-group">
+                        <label for="userEmail">User Email</label>
+                        <input type="text" id="userEmail" name="userEmail" th:field="*{userEmail}"
+                               placeholder="Search by email">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userName">User Name</label>
+                        <input type="text" id="userName" name="userName" th:field="*{userName}"
+                               placeholder="Search by name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eventTitle">Event Title</label>
+                        <input type="text" id="eventTitle" name="eventTitle" th:field="*{eventTitle}"
+                               placeholder="Search by event">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status" name="status" th:field="*{status}">
+                            <option value="">All Statuses</option>
+                            <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"></option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registeredFrom">Registered From</label>
+                        <input type="date" id="registeredFrom" name="registeredFrom"
+                               th:value="${filter.registeredFrom != null ? #temporals.format(filter.registeredFrom, 'yyyy-MM-dd') : ''}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registeredTo">Registered To</label>
+                        <input type="date" id="registeredTo" name="registeredTo"
+                               th:value="${filter.registeredTo != null ? #temporals.format(filter.registeredTo, 'yyyy-MM-dd') : ''}">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <a th:href="@{/admin/registrations}" class="btn" style="background-color: #95a5a6;">Clear</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Registrations Table -->
+        <div class="card">
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                    <tr>
+                        <th class="checkbox-cell">
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+                        </th>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Event</th>
+                        <th>Category</th>
+                        <th>Event Date</th>
+                        <th>Status</th>
+                        <th>Registered At</th>
+                        <th>Comment</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(registrations)}">
+                        <td colspan="10" style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                            No registrations found
+                        </td>
+                    </tr>
+                    <tr th:each="reg : ${registrations}">
+                        <td class="checkbox-cell">
+                            <input type="checkbox" class="registration-checkbox"
+                                   th:value="${reg.id}"
+                                   th:data-status="${reg.status}"
+                                   onchange="updateBulkActions()">
+                        </td>
+                        <td th:text="${reg.id}">1</td>
+                        <td>
+                            <div th:text="${reg.userFullName}" style="font-weight: 500;"></div>
+                            <div th:text="${reg.userEmail}" style="font-size: 0.875rem; color: #7f8c8d;"></div>
+                        </td>
+                        <td>
+                            <div>
+                                <a th:href="@{/admin/events/edit/{id}(id=${reg.eventId})}"
+                                   target="_blank"
+                                   class="event-title-link"
+                                   th:text="${reg.eventTitle}">
+                                    Event Title
+                                </a>
+                            </div>
+                            <div style="font-size: 0.75rem; color: #7f8c8d; margin-top: 0.25rem;">
+                                <span th:if="${reg.eventPoints != null && reg.eventPoints > 0}"
+                                      style="color: #27ae60; font-weight: 500;">
+                                    🏆 <span th:text="${reg.eventPoints}"></span> points
+                                </span>
+                                <span th:if="${reg.eventVolunteerLimit != null && reg.eventVolunteerLimit > 0}"
+                                      style="margin-left: 0.5rem;">
+                                    👥 Max: <span th:text="${reg.eventVolunteerLimit}"></span>
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="category-badge" th:text="${reg.eventCategory}"></span>
+                        </td>
+                        <td th:text="${#temporals.format(reg.eventDateTime, 'MMM dd, yyyy HH:mm')}">Date</td>
+                        <td>
+                            <span class="status-badge"
+                                  th:classappend="${reg.status.name() == 'PENDING' ? 'badge-pending' :
+                                                   reg.status.name() == 'REGISTERED' ? 'badge-registered' :
+                                                   reg.status.name() == 'COMPLETED' ? 'badge-completed' : 'badge-cancelled'}"
+                                  th:text="${reg.status}">
+                                Status
+                            </span>
+                        </td>
+                        <td th:text="${#temporals.format(reg.registeredAt, 'MMM dd, yyyy HH:mm')}">Registered</td>
+                        <td>
+                            <span th:if="${reg.comment != null && !reg.comment.isEmpty()}"
+                                  th:text="${#strings.abbreviate(reg.comment, 30)}"
+                                  th:title="${reg.comment}">
+                                Comment
+                            </span>
+                            <span th:unless="${reg.comment != null && !reg.comment.isEmpty()}"
+                                  style="color: #bdc3c7;">-</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <form th:if="${reg.status.name() == 'PENDING'}"
+                                      th:action="@{/admin/registrations/approve/{id}(id=${reg.id})}"
+                                      method="post" style="display: inline;">
+                                    <button type="submit" class="btn-small" style="background: #27ae60; color: white;">✓ Approve</button>
+                                </form>
+
+                                <form th:if="${reg.status.name() == 'REGISTERED'}"
+                                      th:action="@{/admin/registrations/complete/{id}(id=${reg.id})}"
+                                      method="post" style="display: inline;">
+                                    <button type="submit" class="btn-small" style="background: #3498db; color: white;">✓ Complete</button>
+                                </form>
+
+                                <form th:if="${reg.status.name() != 'CANCELLED'}"
+                                      th:action="@{/admin/registrations/cancel/{id}(id=${reg.id})}"
+                                      method="post" style="display: inline;">
+                                    <button type="submit" class="btn-small" style="background: #f39c12; color: white;">✗ Cancel</button>
+                                </form>
+
+                                <form th:action="@{/admin/registrations/delete/{id}(id=${reg.id})}"
+                                      method="post"
+                                      onsubmit="return confirm('Are you sure you want to delete this registration?')"
+                                      style="display: inline;">
+                                    <button type="submit" class="btn-small" style="background: #e74c3c; color: white;">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div th:if="${totalPages > 0}" class="pagination">
+                <span>Showing <strong th:text="${registrations.size()}"></strong> of
+                    <strong th:text="${totalItems}"></strong> registrations</span>
+
+                <div>
+                    <a th:if="${currentPage > 0}"
+                       th:href="@{/admin/registrations(
+                           page=${currentPage - 1},
+                           size=${param.size != null ? param.size[0] : 10},
+                           userEmail=${filter.userEmail},
+                           userName=${filter.userName},
+                           eventTitle=${filter.eventTitle},
+                           status=${filter.status},
+                           registeredFrom=${filter.registeredFrom},
+                           registeredTo=${filter.registeredTo}
+                       )}"
+                       class="btn-small">Previous</a>
+
+                    <span style="margin: 0 0.5rem;">
+                        Page <strong th:text="${currentPage + 1}"></strong> of
+                        <strong th:text="${totalPages}"></strong>
+                    </span>
+
+                    <a th:if="${currentPage + 1 < totalPages}"
+                       th:href="@{/admin/registrations(
+                           page=${currentPage + 1},
+                           size=${param.size != null ? param.size[0] : 10},
+                           userEmail=${filter.userEmail},
+                           userName=${filter.userName},
+                           eventTitle=${filter.eventTitle},
+                           status=${filter.status},
+                           registeredFrom=${filter.registeredFrom},
+                           registeredTo=${filter.registeredTo}
+                       )}"
+                       class="btn-small">Next</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // Toggle select all checkboxes
+    function toggleSelectAll(checkbox) {
+        const checkboxes = document.querySelectorAll('.registration-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = checkbox.checked;
+        });
+        updateBulkActions();
+    }
+
+    // Update bulk actions bar visibility and count
+    function updateBulkActions() {
+        const checkboxes = document.querySelectorAll('.registration-checkbox:checked');
+        const bulkActionsBar = document.getElementById('bulkActionsBar');
+        const selectedCount = document.getElementById('selectedCount');
+        const selectAllCheckbox = document.getElementById('selectAll');
+
+        selectedCount.textContent = checkboxes.length;
+
+        if (checkboxes.length > 0) {
+            bulkActionsBar.classList.add('active');
+        } else {
+            bulkActionsBar.classList.remove('active');
+        }
+
+        // Update "select all" checkbox state
+        const totalCheckboxes = document.querySelectorAll('.registration-checkbox');
+        selectAllCheckbox.checked = checkboxes.length === totalCheckboxes.length && totalCheckboxes.length > 0;
+        selectAllCheckbox.indeterminate = checkboxes.length > 0 && checkboxes.length < totalCheckboxes.length;
+    }
+
+    // Clear selection
+    function clearSelection() {
+        const checkboxes = document.querySelectorAll('.registration-checkbox');
+        checkboxes.forEach(cb => cb.checked = false);
+        document.getElementById('selectAll').checked = false;
+        updateBulkActions();
+    }
+
+    // Bulk action handler
+    async function bulkAction(action) {
+        const checkboxes = document.querySelectorAll('.registration-checkbox:checked');
+        if (checkboxes.length === 0) {
+            alert('Please select at least one registration');
+            return;
+        }
+
+        const ids = Array.from(checkboxes).map(cb => cb.value);
+
+        let confirmMessage = '';
+        let actionUrl = '';
+
+        switch(action) {
+            case 'approve':
+                confirmMessage = `Are you sure you want to approve ${ids.length} registration(s)?`;
+                actionUrl = '/admin/registrations/approve/';
+                break;
+            case 'complete':
+                confirmMessage = `Are you sure you want to mark ${ids.length} registration(s) as completed?`;
+                actionUrl = '/admin/registrations/complete/';
+                break;
+            case 'cancel':
+                confirmMessage = `Are you sure you want to cancel ${ids.length} registration(s)?`;
+                actionUrl = '/admin/registrations/cancel/';
+                break;
+            case 'delete':
+                confirmMessage = `Are you sure you want to DELETE ${ids.length} registration(s)? This action cannot be undone.`;
+                actionUrl = '/admin/registrations/delete/';
+                break;
+        }
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        // Show loading message
+        const bulkActionsBar = document.getElementById('bulkActionsBar');
+        const originalContent = bulkActionsBar.innerHTML;
+        bulkActionsBar.innerHTML = `
+            <span class="selected-count">Processing ${ids.length} registration(s)...</span>
+            <div style="margin-left: auto;">
+                <div style="display: inline-block; width: 20px; height: 20px; border: 3px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            </div>
+        `;
+
+        // Add spinner animation
+        const style = document.createElement('style');
+        style.textContent = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
+
+        // Process all registrations sequentially
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (let i = 0; i < ids.length; i++) {
+            try {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = actionUrl + ids[i];
+                form.style.display = 'none';
+                document.body.appendChild(form);
+
+                // Create a promise to handle form submission
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(formData)
+                });
+
+                if (response.ok || response.redirected) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                }
+
+                document.body.removeChild(form);
+            } catch (error) {
+                console.error('Error processing registration:', ids[i], error);
+                errorCount++;
+            }
+        }
+
+        // Reload page to show results
+        if (successCount > 0) {
+            window.location.reload();
+        } else {
+            alert(`Failed to process registrations. Errors: ${errorCount}`);
+            bulkActionsBar.innerHTML = originalContent;
+        }
+    }
+
+    // Change rows per page
+    function changeRowsPerPage(size) {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('size', size);
+        currentUrl.searchParams.set('page', '0'); // Reset to first page
+        // All filter parameters are already in the URL, so they will be preserved
+        window.location.href = currentUrl.toString();
+    }
+</script>
+</body>
+</html>

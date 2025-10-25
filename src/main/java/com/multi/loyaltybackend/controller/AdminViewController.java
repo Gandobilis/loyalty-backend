@@ -4,18 +4,13 @@ import com.multi.loyaltybackend.company.dto.CompanyFilterDTO;
 import com.multi.loyaltybackend.company.dto.CompanyResponseDTO;
 import com.multi.loyaltybackend.company.model.Company;
 import com.multi.loyaltybackend.company.service.CompanyService;
-import com.multi.loyaltybackend.dto.EventFilterDTO;
-import com.multi.loyaltybackend.dto.EventFormDTO;
-import com.multi.loyaltybackend.dto.UserFilterDTO;
-import com.multi.loyaltybackend.dto.UserFormDTO;
-import com.multi.loyaltybackend.model.Event;
-import com.multi.loyaltybackend.model.EventCategory;
-import com.multi.loyaltybackend.model.Role;
-import com.multi.loyaltybackend.model.User;
+import com.multi.loyaltybackend.dto.*;
+import com.multi.loyaltybackend.model.*;
 import com.multi.loyaltybackend.repository.EventRepository;
 import com.multi.loyaltybackend.service.AdminService;
 import com.multi.loyaltybackend.service.EventService;
 import com.multi.loyaltybackend.service.ImageStorageService;
+import com.multi.loyaltybackend.service.RegistrationManagementService;
 import com.multi.loyaltybackend.voucher.dto.VoucherFilterDTO;
 import com.multi.loyaltybackend.voucher.dto.VoucherRequest;
 import com.multi.loyaltybackend.voucher.model.Voucher;
@@ -46,6 +41,7 @@ public class AdminViewController {
     private final EventService eventService;
     private final EventRepository eventRepository;
     private final ImageStorageService imageStorageService;
+    private final RegistrationManagementService registrationManagementService;
 
 
 
@@ -543,5 +539,79 @@ public class AdminViewController {
             redirectAttributes.addFlashAttribute("errorMessage", "Error deleting event: " + e.getMessage());
         }
         return "redirect:/admin/events";
+    }
+
+    /**
+     * Registration Management Pages
+     */
+    @GetMapping("/registrations")
+    public String listRegistrations(
+            @ModelAttribute("filter") RegistrationFilterDTO filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "registeredAt") String sort,
+            @RequestParam(defaultValue = "desc") String direction,
+            Model model) {
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+
+        // Ensure filter is never null
+        if (filter == null) {
+            filter = new RegistrationFilterDTO();
+        }
+
+        Page<RegistrationManagementDTO> registrationsPage = registrationManagementService.getFilteredRegistrations(filter, pageable);
+
+        model.addAttribute("registrations", registrationsPage.getContent());
+        model.addAttribute("statuses", RegistrationStatus.values());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", registrationsPage.getTotalPages());
+        model.addAttribute("totalItems", registrationsPage.getTotalElements());
+        model.addAttribute("filter", filter);
+        return "admin/registrations/list";
+    }
+
+    @PostMapping("/registrations/approve/{id}")
+    public String approveRegistration(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            registrationManagementService.updateRegistrationStatus(id, RegistrationStatus.REGISTERED);
+            redirectAttributes.addFlashAttribute("successMessage", "Registration approved successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error approving registration: " + e.getMessage());
+        }
+        return "redirect:/admin/registrations";
+    }
+
+    @PostMapping("/registrations/complete/{id}")
+    public String completeRegistration(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            registrationManagementService.updateRegistrationStatus(id, RegistrationStatus.COMPLETED);
+            redirectAttributes.addFlashAttribute("successMessage", "Registration marked as completed!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error completing registration: " + e.getMessage());
+        }
+        return "redirect:/admin/registrations";
+    }
+
+    @PostMapping("/registrations/cancel/{id}")
+    public String cancelRegistration(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            registrationManagementService.updateRegistrationStatus(id, RegistrationStatus.CANCELLED);
+            redirectAttributes.addFlashAttribute("successMessage", "Registration cancelled!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error cancelling registration: " + e.getMessage());
+        }
+        return "redirect:/admin/registrations";
+    }
+
+    @PostMapping("/registrations/delete/{id}")
+    public String deleteRegistration(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            registrationManagementService.deleteRegistration(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Registration deleted successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting registration: " + e.getMessage());
+        }
+        return "redirect:/admin/registrations";
     }
 }

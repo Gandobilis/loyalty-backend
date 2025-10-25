@@ -1,11 +1,9 @@
 package com.multi.loyaltybackend.service;
 
 import com.multi.loyaltybackend.company.repository.CompanyRepository;
-import com.multi.loyaltybackend.dto.DashboardStatsDTO;
-import com.multi.loyaltybackend.dto.UserFilterDTO;
-import com.multi.loyaltybackend.dto.UserFormDTO;
-import com.multi.loyaltybackend.dto.UserManagementDTO;
+import com.multi.loyaltybackend.dto.*;
 import com.multi.loyaltybackend.exception.UserNotFoundException;
+import com.multi.loyaltybackend.mapper.UserMapper;
 import com.multi.loyaltybackend.model.Role;
 import com.multi.loyaltybackend.model.User;
 import com.multi.loyaltybackend.repository.EventRepository;
@@ -36,6 +34,7 @@ public class AdminService {
     private final RegistrationRepository registrationRepository;
     private final UserVoucherRepository userVoucherRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     /**
      * Get dashboard statistics
@@ -241,19 +240,6 @@ public class AdminService {
      * Convert User entity to UserManagementDTO
      */
     private UserManagementDTO convertToUserManagementDTO(User user) {
-        return UserManagementDTO.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .fullName(user.getFullName())
-                .role(user.getRole())
-                .totalPoints(user.getTotalPoints())
-                .eventCount(user.getEventCount())
-                .workingHours(user.getWorkingHours())
-                .mobileNumber(user.getMobileNumber())
-                .age(user.getAge())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .aboutMe(user.getAboutMe())
-                .build();
+        return userMapper.toManagementDTO(user);
     }
 }
