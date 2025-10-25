@@ -37,4 +37,18 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendEmailVerification(String to, String token) {
+        String verificationUrl = frontendUrl + "/verify-email?token=" + token;
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("Email Verification");
+        message.setText("Welcome! Please verify your email address by clicking the link below:\n\n" +
+                verificationUrl + "\n\n" +
+                "This link will expire in 24 hours.\n\n" +
+                "If you did not create an account, please ignore this email.");
+
+        mailSender.send(message);
+    }
 }

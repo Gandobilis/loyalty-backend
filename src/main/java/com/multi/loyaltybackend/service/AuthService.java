@@ -48,15 +48,23 @@ public class AuthService {
             throw new EmailAlreadyExistsException(request.email());
         }
 
+        // Generate email verification token
+        String verificationToken = UUID.randomUUID().toString();
 
         User user = User.builder()
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .role(request.role() == null ? Role.USER : request.role())
                 .fullName(request.fullName())
+                .emailVerified(false)
+                .emailVerificationToken(verificationToken)
+                .emailVerificationTokenExpiry(LocalDateTime.now().plusHours(24)) // Token expires in 24 hours
                 .build();
 
         userRepository.save(user);
+
+        // Send verification email
+        emailService.sendEmailVerification(request.email(), verificationToken);
     }
 
     public String login(String email, String password) {
@@ -187,5 +195,49 @@ public class AuthService {
     @Transactional
     public void cleanupExpiredResetCodes() {
         passwordResetCodeRepository.deleteExpiredCodes(LocalDateTime.now());
+    }
+
+    /**
+     * Verifies user email using the verification token
+     */
+    @Transactional
+    public void verifyEmail(String token) {
+        User user = userRepository.findByEmailVerificationToken(token)
+                .orElseThrow(() -> new InvalidEmailVerificationTokenException());
+
+        // Check if token has expired
+        if (user.getEmailVerificationTokenExpiry() == null ||
+            user.getEmailVerificationTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new EmailVerificationTokenExpiredException();
+        }
+
+        // Mark email as verified
+        user.setEmailVerified(true);
+        user.setEmailVerificationToken(null);
+        user.setEmailVerificationTokenExpiry(null);
+        userRepository.save(user);
+    }
+
+    /**
+     * Resends email verification token to user
+     */
+    @Transactional
+    public void resendEmailVerification(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        // Check if already verified
+        if (user.getEmailVerified() != null && user.getEmailVerified()) {
+            throw new IllegalStateException("Email is already verified");
+        }
+
+        // Generate new verification token
+        String verificationToken = UUID.randomUUID().toString();
+        user.setEmailVerificationToken(verificationToken);
+        user.setEmailVerificationTokenExpiry(LocalDateTime.now().plusHours(24));
+        userRepository.save(user);
+
+        // Send verification email
+        emailService.sendEmailVerification(email, verificationToken);
     }
 }

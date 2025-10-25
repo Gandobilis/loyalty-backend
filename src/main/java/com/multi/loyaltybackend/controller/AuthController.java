@@ -23,9 +23,8 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> register(@Valid @RequestBody RegisterRequest request) {
         authService.register(request);
-        String token = authService.login(request.email(), request.password());
         Map<String, String> response = new HashMap<>();
-        response.put("token", token);
+        response.put("message", "Registration successful. Please check your email to verify your account.");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -81,5 +80,19 @@ public class AuthController {
     public ResponseEntity<String> resetPasswordWithCode(@Valid @RequestBody PasswordResetCodeRequest request) {
         authService.resetPasswordWithCode(request.email(), request.code(), request.newPassword());
         return ResponseEntity.ok("Password has been reset successfully.");
+    }
+
+    // Email verification endpoints
+
+    @GetMapping("/verify-email")
+    public ResponseEntity<String> verifyEmail(@RequestParam String token) {
+        authService.verifyEmail(token);
+        return ResponseEntity.ok("Email has been verified successfully.");
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<String> resendVerificationEmail(@Valid @RequestBody PasswordResetRequest request) {
+        authService.resendEmailVerification(request.email());
+        return ResponseEntity.ok("Verification email has been sent.");
     }
 }
