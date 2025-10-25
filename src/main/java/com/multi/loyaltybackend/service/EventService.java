@@ -6,10 +6,10 @@ import com.multi.loyaltybackend.dto.EventRequestDTO;
 import com.multi.loyaltybackend.dto.EventResponseDTO;
 import com.multi.loyaltybackend.dto.UserDTO;
 import com.multi.loyaltybackend.model.Event;
-import com.multi.loyaltybackend.model.Registration;
-import com.multi.loyaltybackend.repository.EventRepository; // Hypothetical
+import com.multi.loyaltybackend.repository.EventRepository;
 import com.multi.loyaltybackend.repository.EventSpecifications;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -21,16 +21,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
+@RequiredArgsConstructor
 public class EventService {
 
     private final EventRepository eventRepository;
-    ImageStorageService imageStorageService;
-
-    public EventService(EventRepository eventRepository,  ImageStorageService imageStorageService) {
-        this.eventRepository = eventRepository;
-        this.imageStorageService = imageStorageService;
-    }
+    private final ImageStorageService imageStorageService;
 
     public EventResponseDTO createEvent(EventRequestDTO request) {
         Event event = mapRequestToEntity(request);
@@ -48,8 +43,12 @@ public class EventService {
 
 
     @Transactional(readOnly = true)
-    public List<EventResponseDTO> getAllEvents(String category, LocalDate startDate, LocalDate endDate) {
+    public List<EventResponseDTO> getAllEvents(String search, String category, LocalDate startDate, LocalDate endDate) {
         Specification<Event> spec = Specification.where(null);
+
+        if (search != null) {
+            spec = spec.and(EventSpecifications.searchContains(search));
+        }
 
         if (category != null) {
             spec = spec.and(EventSpecifications.hasCategory(category));

@@ -4,6 +4,7 @@ import com.multi.loyaltybackend.dto.EventRequestDTO;
 import com.multi.loyaltybackend.dto.EventResponseDTO;
 import com.multi.loyaltybackend.service.EventService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,13 +15,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/events")
+@RequiredArgsConstructor
 public class EventController {
 
     private final EventService eventService;
-
-    public EventController(EventService eventService) {
-        this.eventService = eventService;
-    }
 
     @PostMapping
     public ResponseEntity<EventResponseDTO> createEvent(@Valid @RequestBody EventRequestDTO request) {
@@ -36,11 +34,12 @@ public class EventController {
 
     @GetMapping
     public ResponseEntity<List<EventResponseDTO>> getAllEvents(
+            @RequestParam(required = false) String search,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
-        List<EventResponseDTO> response = eventService.getAllEvents(category, startDate, endDate);
+        List<EventResponseDTO> response = eventService.getAllEvents(search, category, startDate, endDate);
         return ResponseEntity.ok(response);
     }
 
