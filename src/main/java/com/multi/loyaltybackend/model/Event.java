@@ -46,6 +46,8 @@ public class Event {
     @Column(nullable = false, length = 50)
     private EventCategory category;
 
+    private int volunteer;
+
     @Size(max = 255, message = "Address must not exceed 255 characters")
     private String address;
 
