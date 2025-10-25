@@ -1,33 +1,34 @@
 package com.multi.loyaltybackend.service;
 
-import com.multi.loyaltybackend.dto.EventDTO;
-import com.multi.loyaltybackend.dto.ProfileResponseDTO;
+import com.multi.loyaltybackend.company.model.Company;
+import com.multi.loyaltybackend.dto.ProfileResponse;
+import com.multi.loyaltybackend.dto.UserEventResponse;
+import com.multi.loyaltybackend.dto.UserVoucherResponse;
+import com.multi.loyaltybackend.model.Event;
+import com.multi.loyaltybackend.model.Registration;
 import com.multi.loyaltybackend.model.User;
 import com.multi.loyaltybackend.repository.UserRepository;
-import com.multi.loyaltybackend.dto.ProfileUpdateDTO;
-import com.multi.loyaltybackend.voucher.dto.VoucherDTO;
-import com.multi.loyaltybackend.voucher.dto.VoucherDTOWithStatus;
+import com.multi.loyaltybackend.dto.ProfileUpdate;
+import com.multi.loyaltybackend.voucher.model.UserVoucher;
 import com.multi.loyaltybackend.voucher.model.Voucher;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ProfileService {
-
     private final UserRepository userRepository;
     private final ImageStorageService fileStorageService;
-
-    public ProfileResponseDTO getProfile(String email) {
+    public ProfileResponse getProfile(String email) {
         User user = findUserByEmail(email);
         return mapToProfileResponseDTO(user);
     }
 
-    public ProfileResponseDTO updateProfile(String email, ProfileUpdateDTO dto) {
+    public ProfileResponse updateProfile(String email, ProfileUpdate dto) {
         User user = findUserByEmail(email);
 
         if (dto.getFullName() != null) user.setFullName(dto.getFullName());
@@ -39,14 +40,14 @@ public class ProfileService {
     }
 
     @Transactional
-    public ProfileResponseDTO uploadProfileImage(String email, MultipartFile image) {
+    public ProfileResponse uploadProfileImage(String email, MultipartFile image) {
         User user = findUserByEmail(email);
 
         String newFileName = fileStorageService.storeFile(image);
         String oldFileName = user.getFileName();
 
         user.setFileName(newFileName);
-        ProfileResponseDTO response = mapToProfileResponseDTO(userRepository.save(user));
+        ProfileResponse response = mapToProfileResponseDTO(userRepository.save(user));
 
         deleteOldFileIfNeeded(oldFileName, newFileName);
         return response;
@@ -75,42 +76,49 @@ public class ProfileService {
         }
     }
 
-    private ProfileResponseDTO mapToProfileResponseDTO(User user) {
-        return ProfileResponseDTO.builder()
-                .registrations(user.getRegistrations().stream()
-                        .map(registration -> new EventDTO(
-                                registration.getEvent().getId(),
-                                registration.getEvent().getTitle(),
-                                registration.getEvent().getPoints(),
-                                registration.getEvent().getDateTime(),
-                                (registration.getEvent().getFileName() != null ? fileStorageService.getFilePath(registration.getEvent().getFileName()) : null),
-                                registration.getStatus()
-                        ))
-                        .collect(Collectors.toList()))
-                .vouchers(user.getUserVouchers().stream().map(userVoucher -> {
-                    Voucher voucher = userVoucher.getVoucher();
-                    return VoucherDTOWithStatus.builder()
-                            .id(voucher.getId())
-                            .title(voucher.getTitle())
-                            .points(voucher.getPoints())
-                            .description(voucher.getDescription())
-                            .expiry(voucher.getExpiry())
-                            .status(userVoucher.getStatus())
-                            .build();
-                }).toList())
-                .id(user.getId())
-                .email(user.getEmail())
+    private ProfileResponse mapToProfileResponseDTO(User user) {
+        return ProfileResponse.builder()
                 .fullName(user.getFullName())
                 .age(user.getAge())
                 .mobileNumber(user.getMobileNumber())
                 .aboutMe(user.getAboutMe())
                 .fileName(user.getFileName() != null ? fileStorageService.getFilePath(user.getFileName()) : null)
-                .role(user.getRole())
                 .totalPoints(user.getTotalPoints())
                 .eventCount(user.getEventCount())
                 .workingHours(user.getWorkingHours())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
                 .build();
+    }
+
+    public List<UserEventResponse> getUserEvents(String email) {
+        User user = findUserByEmail(email);
+        List<Registration> registrations = user.getRegistrations();
+        return registrations.stream().map(registration -> {
+            Event event = registration.getEvent();
+            return UserEventResponse.builder()
+                    .id(event.getId())
+                    .title(event.getTitle())
+                    .points(event.getPoints())
+                    .dateTime(event.getDateTime())
+                    .status(registration.getStatus())
+                    .build();
+        }).toList();
+    }
+
+    public List<UserVoucherResponse> getUserVouchers(String email) {
+        User user = findUserByEmail(email);
+        List<UserVoucher> vouchers = user.getUserVouchers();
+        return vouchers.stream().map(userVoucher -> {
+            Voucher voucher = userVoucher.getVoucher();
+            Company company = voucher.getCompany();
+            return UserVoucherResponse.builder()
+                    .id(voucher.getId())
+                    .title(voucher.getTitle())
+                    .points(voucher.getPoints())
+                    .expiry(voucher.getExpiry())
+                    .status(userVoucher.getStatus())
+                    .companyName(company.getName())
+                    .companyLogoFileName(company.getLogoFileName() != null ? fileStorageService.getFilePath(company.getLogoFileName()) : null)
+                    .build();
+        }).toList();
     }
 }

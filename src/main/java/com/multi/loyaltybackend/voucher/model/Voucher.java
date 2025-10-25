@@ -32,10 +32,6 @@ public class Voucher {
     private String title;
 
     @Column(nullable = false)
-    @NotNull(message = "Description is required")
-    private String description;
-
-    @Column(nullable = false)
     @NotNull(message = "points is required")
     private Integer points;
 

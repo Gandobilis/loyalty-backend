@@ -75,6 +75,7 @@
                     <thead>
                         <tr>
                             <th>ID</th>
+                            <th>Image</th>
                             <th>Title</th>
                             <th>Category</th>
                             <th>Address</th>
@@ -92,6 +93,12 @@
                         </tr>
                         <tr th:each="event : ${events}">
                             <td th:text="${event.id}">1</td>
+                            <td>
+                                <img th:if="${event.fileName}"
+                                     th:src="${event.fileName}"
+                                     width="100"
+                                     style="max-height: 50px; object-fit: contain;"/>
+                            </td>
                             <td th:text="${event.title}">Event Title</td>
                             <td>
                                 <span th:text="${event.category}"

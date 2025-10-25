@@ -505,6 +505,7 @@ public class GlobalExceptionHandler {
                     method, path, status.value(), errorCode, correlationId, ex.getMessage()
             );
         } else if (status.is4xxClientError()) {
+            ex.printStackTrace();
             log.warn(
                     "Client error occurred - Method: {}, Path: {}, Status: {}, ErrorCode: {}, CorrelationId: {}, Message: {}",
                     method, path, status.value(), errorCode, correlationId, ex.getMessage()

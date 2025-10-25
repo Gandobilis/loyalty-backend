@@ -43,8 +43,8 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Name</th>
                             <th>Logo</th>
+                            <th>Name</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -56,11 +56,13 @@
                         </tr>
                         <tr th:each="company : ${companies}">
                             <td th:text="${company.id}">1</td>
-                            <td th:text="${company.name}">Company Name</td>
                             <td>
-                                <span th:if="${company.logoFileName}" th:text="${company.logoFileName}">logo.png</span>
-                                <span th:unless="${company.logoFileName}" style="color: #95a5a6;">No logo</span>
+                                <img th:if="${company.logoFileName}"
+                                     th:src="${company.logoFileName}"
+                                     width="100"
+                                     style="max-height: 50px; object-fit: contain;"/>
                             </td>
+                            <td th:text="${company.name}">Company Name</td>
                             <td>
                                 <div class="actions">
                                     <a th:href="@{/admin/companies/edit/{id}(id=${company.id})}" class="btn btn-secondary">Edit</a>

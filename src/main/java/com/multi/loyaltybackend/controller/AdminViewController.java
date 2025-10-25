@@ -211,7 +211,6 @@ public class AdminViewController {
         try {
             Voucher voucher = new Voucher();
             voucher.setTitle(voucherForm.getTitle());
-            voucher.setDescription(voucherForm.getDescription());
             voucher.setPoints(voucherForm.getPoints());
             voucher.setExpiry(voucherForm.getExpiry());
             voucherService.updateVoucher(id, voucher);

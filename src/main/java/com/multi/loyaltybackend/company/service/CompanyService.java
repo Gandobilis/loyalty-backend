@@ -176,7 +176,6 @@ public class CompanyService {
         return VoucherDTO.builder()
                 .id(voucher.getId())
                 .title(voucher.getTitle())
-                .description(voucher.getDescription())
                 .expiry(voucher.getExpiry())
                 .points(voucher.getPoints())
                 .build();

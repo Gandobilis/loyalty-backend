@@ -26,7 +26,6 @@ public class CompanyMapper {
         return VoucherDTO.builder()
                 .id(voucher.getId())
                 .title(voucher.getTitle())
-                .description(voucher.getDescription())
                 .points(voucher.getPoints())
                 .expiry(voucher.getExpiry())
                 .build();

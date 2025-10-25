@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Data initialization component that creates sample data on application startup.
  * Only runs in development and test profiles.
- *
+ * <p>
  * Creates:
  * - Admin and regular users
  * - Companies (sponsors)
@@ -90,6 +90,7 @@ public class DataInitializer implements CommandLineRunner {
                 .eventCount(0)
                 .workingHours(0)
                 .aboutMe("System administrator account for managing the loyalty platform")
+                .fileName("default-profile.png")
                 .build();
         users.add(admin);
 
@@ -105,6 +106,7 @@ public class DataInitializer implements CommandLineRunner {
                 .eventCount(3)
                 .workingHours(15)
                 .aboutMe("Passionate about community service and cultural events")
+                .fileName("default-profile.png")
                 .build();
         users.add(user1);
 
@@ -119,6 +121,7 @@ public class DataInitializer implements CommandLineRunner {
                 .eventCount(8)
                 .workingHours(40)
                 .aboutMe("Active volunteer interested in sports and youth programs")
+                .fileName("default-profile.png")
                 .build();
         users.add(user2);
 
@@ -133,6 +136,7 @@ public class DataInitializer implements CommandLineRunner {
                 .eventCount(2)
                 .workingHours(10)
                 .aboutMe("Education enthusiast and occasional volunteer")
+                .fileName("default-profile.png")
                 .build();
         users.add(user3);
 
@@ -147,6 +151,7 @@ public class DataInitializer implements CommandLineRunner {
                 .eventCount(15)
                 .workingHours(75)
                 .aboutMe("Dedicated volunteer coordinator with focus on youth development")
+                .fileName("default-profile.png")
                 .build();
         users.add(user4);
 
@@ -161,6 +166,7 @@ public class DataInitializer implements CommandLineRunner {
                 .eventCount(1)
                 .workingHours(5)
                 .aboutMe("New to volunteering, interested in cultural activities")
+                .fileName("default-profile.png")
                 .build();
         users.add(user5);
 
@@ -175,10 +181,9 @@ public class DataInitializer implements CommandLineRunner {
                 .eventCount(11)
                 .workingHours(55)
                 .aboutMe("Sports enthusiast and community organizer")
+                .fileName("default-profile.png")
                 .build();
         users.add(user6);
-
-        users.forEach(user -> user.setFileName("file.png"));
 
         userRepository.saveAll(users);
         log.info("Created {} users", users.size());
@@ -194,25 +199,28 @@ public class DataInitializer implements CommandLineRunner {
 
         companies.add(Company.builder()
                 .name("TechCorp Solutions")
+                .logoFileName("logo1.png")
                 .build());
 
         companies.add(Company.builder()
                 .name("Green Earth Foundation")
+                .logoFileName("logo2.png")
                 .build());
 
         companies.add(Company.builder()
                 .name("Fitness Plus")
+                .logoFileName("logo3.png")
                 .build());
 
         companies.add(Company.builder()
                 .name("BookWorld")
+                .logoFileName("logo4.png")
                 .build());
 
         companies.add(Company.builder()
                 .name("Coffee Culture")
+                .logoFileName("logo5.png")
                 .build());
-
-        companies.forEach(user -> user.setLogoFileName("file.png"));
 
         companyRepository.saveAll(companies);
         log.info("Created {} companies", companies.size());
@@ -238,6 +246,7 @@ public class DataInitializer implements CommandLineRunner {
                 .longitude(44.8015)
                 .dateTime(LocalDateTime.now().plusDays(10).withHour(18).withMinute(0))
                 .points(50)
+                        .fileName("cover1.png")
                 .build());
 
         events.add(Event.builder()
@@ -251,6 +260,7 @@ public class DataInitializer implements CommandLineRunner {
                 .longitude(44.8036)
                 .dateTime(LocalDateTime.now().plusDays(15).withHour(19).withMinute(30))
                 .points(40)
+                        .fileName("cover2.png")
                 .build());
 
         events.add(Event.builder()
@@ -263,6 +273,7 @@ public class DataInitializer implements CommandLineRunner {
                 .longitude(44.8271)
                 .dateTime(LocalDateTime.now().minusDays(5).withHour(15).withMinute(0))
                 .points(45)
+                        .fileName("cover3.png")
                 .build());
 
         // SPORT events
@@ -277,6 +288,7 @@ public class DataInitializer implements CommandLineRunner {
                 .longitude(44.7736)
                 .dateTime(LocalDateTime.now().plusDays(20).withHour(8).withMinute(0))
                 .points(100)
+                        .fileName("cover4.png")
                 .build());
 
         events.add(Event.builder()
@@ -290,6 +302,7 @@ public class DataInitializer implements CommandLineRunner {
                 .longitude(44.7514)
                 .dateTime(LocalDateTime.now().plusDays(12).withHour(16).withMinute(0))
                 .points(30)
+                        .fileName("cover5.png")
                 .build());
 
         events.add(Event.builder()
@@ -303,6 +316,7 @@ public class DataInitializer implements CommandLineRunner {
                 .longitude(44.6459)
                 .dateTime(LocalDateTime.now().minusDays(3).withHour(6).withMinute(0))
                 .points(80)
+                        .fileName("cover6.png")
                 .build());
 
         // EDUCATION events
@@ -317,6 +331,7 @@ public class DataInitializer implements CommandLineRunner {
                 .longitude(44.8075)
                 .dateTime(LocalDateTime.now().plusDays(8).withHour(10).withMinute(0))
                 .points(60)
+                        .fileName("cover7.png")
                 .build());
 
         events.add(Event.builder()
@@ -330,6 +345,7 @@ public class DataInitializer implements CommandLineRunner {
                 .longitude(44.7736)
                 .dateTime(LocalDateTime.now().plusDays(18).withHour(14).withMinute(0))
                 .points(55)
+                        .fileName("cover8.png")
                 .build());
 
         events.add(Event.builder()
@@ -343,6 +359,7 @@ public class DataInitializer implements CommandLineRunner {
                 .longitude(44.7736)
                 .dateTime(LocalDateTime.now().minusDays(10).withHour(17).withMinute(0))
                 .points(70)
+                        .fileName("cover9.png")
                 .build());
 
         // YOUTH events
@@ -357,6 +374,7 @@ public class DataInitializer implements CommandLineRunner {
                 .longitude(44.7358)
                 .dateTime(LocalDateTime.now().plusDays(25).withHour(9).withMinute(0))
                 .points(120)
+                        .fileName("cover10.png")
                 .build());
 
         events.add(Event.builder()
@@ -370,6 +388,7 @@ public class DataInitializer implements CommandLineRunner {
                 .longitude(44.7514)
                 .dateTime(LocalDateTime.now().plusDays(5).withHour(15).withMinute(0))
                 .points(40)
+                        .fileName("cover10.png")
                 .build());
 
         events.add(Event.builder()
@@ -383,6 +402,7 @@ public class DataInitializer implements CommandLineRunner {
                 .longitude(44.7831)
                 .dateTime(LocalDateTime.now().minusDays(7).withHour(13).withMinute(0))
                 .points(35)
+                        .fileName("cover10.png")
                 .build());
 
         events.add(Event.builder()
@@ -396,9 +416,8 @@ public class DataInitializer implements CommandLineRunner {
                 .longitude(44.7872)
                 .dateTime(LocalDateTime.now().plusDays(30).withHour(18).withMinute(0))
                 .points(50)
+                .fileName("default-event.png")
                 .build());
-
-        events.forEach(user -> user.setFileName("file.png"));
 
         eventRepository.saveAll(events);
         log.info("Created {} events", events.size());
@@ -415,7 +434,6 @@ public class DataInitializer implements CommandLineRunner {
         // TechCorp Solutions vouchers
         vouchers.add(Voucher.builder()
                 .title("Tech Gadget Discount - 20% Off")
-                .description("Get 20% off on any tech gadget purchase up to $100")
                 .points(200)
                 .expiry(LocalDateTime.now().plusMonths(3))
                 .company(companies.get(0))
@@ -423,7 +441,6 @@ public class DataInitializer implements CommandLineRunner {
 
         vouchers.add(Voucher.builder()
                 .title("Free Tech Support Session")
-                .description("1-hour free technical support session for your devices")
                 .points(150)
                 .expiry(LocalDateTime.now().plusMonths(2))
                 .company(companies.get(0))
@@ -432,7 +449,6 @@ public class DataInitializer implements CommandLineRunner {
         // Green Earth Foundation vouchers
         vouchers.add(Voucher.builder()
                 .title("Eco-Friendly Product Bundle")
-                .description("Bundle of sustainable eco-friendly products including reusable bags and bamboo utensils")
                 .points(180)
                 .expiry(LocalDateTime.now().plusMonths(4))
                 .company(companies.get(1))
@@ -440,7 +456,6 @@ public class DataInitializer implements CommandLineRunner {
 
         vouchers.add(Voucher.builder()
                 .title("Tree Planting Certificate")
-                .description("Plant a tree in your name with certificate of contribution")
                 .points(100)
                 .expiry(LocalDateTime.now().plusMonths(6))
                 .company(companies.get(1))
@@ -449,7 +464,6 @@ public class DataInitializer implements CommandLineRunner {
         // Fitness Plus vouchers
         vouchers.add(Voucher.builder()
                 .title("1 Month Gym Membership")
-                .description("Full access to gym facilities including classes for 30 days")
                 .points(300)
                 .expiry(LocalDateTime.now().plusMonths(2))
                 .company(companies.get(2))
@@ -457,7 +471,6 @@ public class DataInitializer implements CommandLineRunner {
 
         vouchers.add(Voucher.builder()
                 .title("Personal Training Session")
-                .description("One-on-one personal training session with certified trainer")
                 .points(120)
                 .expiry(LocalDateTime.now().plusMonths(3))
                 .company(companies.get(2))
@@ -465,7 +478,6 @@ public class DataInitializer implements CommandLineRunner {
 
         vouchers.add(Voucher.builder()
                 .title("Fitness Class Pack - 5 Sessions")
-                .description("5 group fitness classes of your choice (yoga, pilates, HIIT)")
                 .points(180)
                 .expiry(LocalDateTime.now().plusMonths(2))
                 .company(companies.get(2))
@@ -474,7 +486,6 @@ public class DataInitializer implements CommandLineRunner {
         // BookWorld vouchers
         vouchers.add(Voucher.builder()
                 .title("Book Voucher - $20")
-                .description("$20 credit towards any book purchase at BookWorld stores")
                 .points(150)
                 .expiry(LocalDateTime.now().plusMonths(5))
                 .company(companies.get(3))
@@ -482,7 +493,6 @@ public class DataInitializer implements CommandLineRunner {
 
         vouchers.add(Voucher.builder()
                 .title("Audiobook Subscription - 3 Months")
-                .description("3 months of premium audiobook subscription")
                 .points(250)
                 .expiry(LocalDateTime.now().plusMonths(3))
                 .company(companies.get(3))
@@ -491,7 +501,6 @@ public class DataInitializer implements CommandLineRunner {
         // Coffee Culture vouchers
         vouchers.add(Voucher.builder()
                 .title("Free Coffee for a Week")
-                .description("One free coffee per day for 7 days at any Coffee Culture location")
                 .points(80)
                 .expiry(LocalDateTime.now().plusMonths(1))
                 .company(companies.get(4))
@@ -499,7 +508,6 @@ public class DataInitializer implements CommandLineRunner {
 
         vouchers.add(Voucher.builder()
                 .title("Coffee Tasting Experience")
-                .description("Premium coffee tasting session with expert barista")
                 .points(120)
                 .expiry(LocalDateTime.now().plusMonths(2))
                 .company(companies.get(4))
@@ -507,7 +515,6 @@ public class DataInitializer implements CommandLineRunner {
 
         vouchers.add(Voucher.builder()
                 .title("Coffee + Pastry Combo - 5 Times")
-                .description("5 vouchers for coffee and pastry combo")
                 .points(100)
                 .expiry(LocalDateTime.now().plusMonths(2))
                 .company(companies.get(4))

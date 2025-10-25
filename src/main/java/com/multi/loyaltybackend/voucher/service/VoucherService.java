@@ -58,8 +58,7 @@ public class VoucherService {
                             .id(voucher.getId())
                             .title(voucher.getTitle())
                             .points(voucher.getPoints())
-                            .expiry(voucher.getExpiry())
-                            .description(voucher.getDescription());
+                            .expiry(voucher.getExpiry());
 
                     // Map company fields individually
                     if (voucher.getCompany() != null) {
@@ -112,8 +111,7 @@ public class VoucherService {
                     .id(voucher.getId())
                     .title(voucher.getTitle())
                     .points(voucher.getPoints())
-                    .expiry(voucher.getExpiry())
-                    .description(voucher.getDescription());
+                    .expiry(voucher.getExpiry());
 
             // Map company fields individually
             if (voucher.getCompany() != null) {
@@ -136,8 +134,7 @@ public class VoucherService {
                             .id(voucher.getId())
                             .title(voucher.getTitle())
                             .points(voucher.getPoints())
-                            .expiry(voucher.getExpiry())
-                            .description(voucher.getDescription());
+                            .expiry(voucher.getExpiry());
 
                     // Map company fields individually
                     if (voucher.getCompany() != null) {
@@ -160,7 +157,6 @@ public class VoucherService {
 
         Voucher voucher = new Voucher();
         voucher.setTitle(request.getTitle());
-        voucher.setDescription(request.getDescription());
         voucher.setPoints(request.getPoints());
         voucher.setExpiry(request.getExpiry());
         voucher.setCompany(company);
@@ -174,7 +170,6 @@ public class VoucherService {
                 .orElseThrow(() -> new VoucherNotFoundException(id));
 
         voucher.setTitle(voucherDetails.getTitle());
-        voucher.setDescription(voucherDetails.getDescription());
         voucher.setPoints(voucherDetails.getPoints());
         voucher.setExpiry(voucherDetails.getExpiry());
 
