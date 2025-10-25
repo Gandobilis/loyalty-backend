@@ -8,7 +8,7 @@ import com.multi.loyaltybackend.model.Event;
 import com.multi.loyaltybackend.model.Registration;
 import com.multi.loyaltybackend.model.User;
 import com.multi.loyaltybackend.repository.UserRepository;
-import com.multi.loyaltybackend.dto.ProfileUpdate;
+import com.multi.loyaltybackend.dto.ProfileUpdateRequest;
 import com.multi.loyaltybackend.voucher.model.UserVoucher;
 import com.multi.loyaltybackend.voucher.model.Voucher;
 import jakarta.transaction.Transactional;
@@ -28,7 +28,7 @@ public class ProfileService {
         return mapToProfileResponseDTO(user);
     }
 
-    public ProfileResponse updateProfile(String email, ProfileUpdate dto) {
+    public ProfileResponse updateProfile(String email, ProfileUpdateRequest dto) {
         User user = findUserByEmail(email);
 
         if (dto.getFullName() != null) user.setFullName(dto.getFullName());

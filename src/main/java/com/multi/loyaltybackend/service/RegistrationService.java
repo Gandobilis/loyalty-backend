@@ -12,6 +12,7 @@ import com.multi.loyaltybackend.dto.RegistrationResponse;
 import com.multi.loyaltybackend.repository.RegistrationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,19 +27,17 @@ public class RegistrationService {
     private final EventRepository eventRepository;
 
     @Transactional
-    public RegistrationResponse registerUserToEvent(Long userId, Long eventId, String comment) {
-        log.info("Attempting to register user {} to event {}", userId, eventId);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+    public RegistrationResponse registerUserToEvent(String email, Long eventId, String comment) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        log.info("Attempting to register user {} to event {}", email, eventId);
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event", "id", eventId));
 
-        // Check for duplicate registration
-        if (eventRegistrationRepository.existsByUserIdAndEventId(userId, eventId)) {
+        if (eventRegistrationRepository.existsByUserIdAndEventId(user.getId(), eventId)) {
             throw new DuplicateRegistrationException(
-                    String.format("User %d is already registered for event %d", userId, eventId)
+                    String.format("User %s is already registered for event %d", email, eventId)
             );
         }
 
@@ -51,16 +50,7 @@ public class RegistrationService {
 
         Registration savedRegistration = eventRegistrationRepository.save(registration);
 
-        // Award points to user for registering to the event
-        if (event.getPoints() != null && event.getPoints() > 0) {
-            user.incrementPoints(event.getPoints());
-            user.incrementEventCount();
-            userRepository.save(user);
-            log.info("Awarded {} points to user {} for registering to event {}",
-                    event.getPoints(), userId, eventId);
-        }
-
-        log.info("Successfully registered user {} to event {}", userId, eventId);
+        log.info("Successfully registered user {} to event {}", email, eventId);
 
         return mapToResponse(savedRegistration);
     }

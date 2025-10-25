@@ -1,7 +1,7 @@
 package com.multi.loyaltybackend.controller;
 
 import com.multi.loyaltybackend.dto.ProfileResponse;
-import com.multi.loyaltybackend.dto.ProfileUpdate;
+import com.multi.loyaltybackend.dto.ProfileUpdateRequest;
 import com.multi.loyaltybackend.dto.UserEventResponse;
 import com.multi.loyaltybackend.dto.UserVoucherResponse;
 import com.multi.loyaltybackend.service.ProfileService;
@@ -29,7 +29,7 @@ public class ProfileController {
 
     @PutMapping
     public ResponseEntity<ProfileResponse> updateProfile(
-            @Valid @RequestBody ProfileUpdate update,
+            @Valid @RequestBody ProfileUpdateRequest update,
             Authentication authentication) {
         ProfileResponse updatedProfile = profileService.updateProfile(authentication.getName(), update);
         return ResponseEntity.ok(updatedProfile);
