@@ -63,21 +63,21 @@ public class VoucherController {
     public ResponseEntity<UserVoucher> exchangeVoucher(
             Authentication authentication,
             @Valid @RequestBody UserVoucherRequest request) {
-        UserVoucher created = voucherService.exchangeVoucher(
+        voucherService.exchangeVoucher(
                 authentication.getName(),
                 request.getVoucherId()
         );
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/redeem")
     public ResponseEntity<UserVoucher> redeemVoucher(
             Authentication authentication,
             @Valid @RequestBody UserVoucherRequest request) {
-        UserVoucher created = voucherService.redeemVoucher(
+        voucherService.redeemVoucher(
                 authentication.getName(),
                 request.getVoucherId()
         );
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        return ResponseEntity.noContent().build();
     }
 }
