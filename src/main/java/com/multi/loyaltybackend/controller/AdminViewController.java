@@ -1,6 +1,7 @@
 package com.multi.loyaltybackend.controller;
 
 import com.multi.loyaltybackend.company.dto.CompanyFilterDTO;
+import com.multi.loyaltybackend.company.dto.CompanyResponseDTO;
 import com.multi.loyaltybackend.company.model.Company;
 import com.multi.loyaltybackend.company.service.CompanyService;
 import com.multi.loyaltybackend.dto.EventFilterDTO;
@@ -215,6 +216,18 @@ public class AdminViewController {
             voucher.setTitle(voucherForm.getTitle());
             voucher.setPoints(voucherForm.getPoints());
             voucher.setExpiry(voucherForm.getExpiry());
+            CompanyResponseDTO company = companyService.getCompanyById(voucherForm.getCompanyId())
+                    .orElseThrow(
+                            () -> new RuntimeException("Company not found with ID: " + voucherForm.getCompanyId()
+                            )
+                    );
+
+            Company com = Company.builder()
+                    .id(company.getId())
+                    .name(company.getName())
+                    .logoFileName(company.getLogoFileName())
+                    .build();
+            voucher.setCompany(com);
             voucherService.updateVoucher(id, voucher);
             redirectAttributes.addFlashAttribute("successMessage", "Voucher updated successfully!");
             return "redirect:/admin/vouchers";

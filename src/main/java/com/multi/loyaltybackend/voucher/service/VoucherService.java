@@ -172,6 +172,7 @@ public class VoucherService {
         voucher.setTitle(voucherDetails.getTitle());
         voucher.setPoints(voucherDetails.getPoints());
         voucher.setExpiry(voucherDetails.getExpiry());
+        voucher.setCompany(voucherDetails.getCompany());
 
         return voucherRepository.save(voucher);
     }
