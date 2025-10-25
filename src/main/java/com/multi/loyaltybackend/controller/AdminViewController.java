@@ -18,6 +18,7 @@ import com.multi.loyaltybackend.voucher.dto.VoucherFilterDTO;
 import com.multi.loyaltybackend.voucher.dto.VoucherRequest;
 import com.multi.loyaltybackend.voucher.model.Voucher;
 import com.multi.loyaltybackend.voucher.service.VoucherService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +27,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -263,14 +265,32 @@ public class AdminViewController {
     }
 
     @PostMapping("/users/new")
-    public String createUser(@ModelAttribute UserFormDTO userForm, RedirectAttributes redirectAttributes) {
+    public String createUser(
+            @Valid @ModelAttribute("user") UserFormDTO userForm,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        // Custom validation: password is required for new users
+        if (userForm.getPassword() == null || userForm.getPassword().trim().isEmpty()) {
+            bindingResult.rejectValue("password", "error.password", "Password is required for new users");
+        }
+
+        // Check for validation errors
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("user", userForm);
+            model.addAttribute("errorMessage", "Please correct the validation errors.");
+            return "admin/users/form";
+        }
+
         try {
             adminService.createUser(userForm);
             redirectAttributes.addFlashAttribute("successMessage", "User created successfully!");
             return "redirect:/admin/users";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error creating user: " + e.getMessage());
-            return "redirect:/admin/users/new";
+            model.addAttribute("user", userForm);
+            model.addAttribute("errorMessage", "Error creating user: " + e.getMessage());
+            return "admin/users/form";
         }
     }
 
@@ -306,15 +326,29 @@ public class AdminViewController {
     @PostMapping("/users/edit/{id}")
     public String updateUser(
             @PathVariable Long id,
-            @ModelAttribute UserFormDTO userForm,
+            @Valid @ModelAttribute("user") UserFormDTO userForm,
+            BindingResult bindingResult,
+            Model model,
             RedirectAttributes redirectAttributes) {
+
+        if (bindingResult.hasErrors()) {
+            // Stay on the same page and show validation errors
+            userForm.setId(id); // Ensure ID is set for the form
+            model.addAttribute("user", userForm);
+            model.addAttribute("errorMessage", "Please correct the validation errors.");
+            return "admin/users/form";
+        }
+
         try {
             adminService.updateUser(id, userForm);
             redirectAttributes.addFlashAttribute("successMessage", "User updated successfully!");
             return "redirect:/admin/users";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error updating user: " + e.getMessage());
-            return "redirect:/admin/users/edit/" + id;
+            e.printStackTrace();
+            userForm.setId(id); // Ensure ID is set for the form
+            model.addAttribute("user", userForm);
+            model.addAttribute("errorMessage", "Error updating user: " + e.getMessage());
+            return "admin/users/form";
         }
     }
 

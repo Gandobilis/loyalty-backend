@@ -68,7 +68,11 @@ public class OpenAPIConfig {
                 .servers(List.of(
                         new Server()
                                 .url(serverUrl)
-                                .description("Dynamic Server URL")))
+                                .description("Development Server URL"),
+                        new Server()
+                                .url("http://localhost:8080")
+                                .description("Local development server")
+                        ))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName,

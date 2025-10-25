@@ -22,60 +22,103 @@
 
             <div class="card">
                 <!-- Create form -->
-                <form th:if="${user.id == null}" th:action="@{/admin/users/new}" method="post">
+                <form th:if="${user.id == null}"
+                      th:action="@{/admin/users/new}"
+                      th:object="${user}"
+                      method="post">
                     <div class="form-group">
                         <label for="email-new">Email *</label>
-                        <input type="email" id="email-new" name="email" th:value="${user.email}" required>
+                        <input type="email" id="email-new" th:field="*{email}" required>
+                        <span th:if="${#fields.hasErrors('email')}"
+                              th:errors="*{email}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="password-new">Password *</label>
-                        <input type="password" id="password-new" name="password" minlength="8" required>
+                        <input type="password" id="password-new" th:field="*{password}" minlength="8" required>
                         <small>Minimum 8 characters</small>
+                        <span th:if="${#fields.hasErrors('password')}"
+                              th:errors="*{password}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="fullName-new">Full Name *</label>
-                        <input type="text" id="fullName-new" name="fullName" th:value="${user.fullName}" required minlength="2" maxlength="100">
+                        <input type="text" id="fullName-new" th:field="*{fullName}" required minlength="2" maxlength="100">
+                        <span th:if="${#fields.hasErrors('fullName')}"
+                              th:errors="*{fullName}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="age-new">Age</label>
-                        <input type="number" id="age-new" name="age" th:value="${user.age}" min="0" max="150">
+                        <input type="number" id="age-new" th:field="*{age}" min="0" max="150">
+                        <span th:if="${#fields.hasErrors('age')}"
+                              th:errors="*{age}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="mobileNumber-new">Mobile Number</label>
-                        <input type="tel" id="mobileNumber-new" name="mobileNumber" th:value="${user.mobileNumber}" pattern="^\+?[1-9]\d{1,14}$">
+                        <input type="tel" id="mobileNumber-new" th:field="*{mobileNumber}">
                         <small>E.164 format (e.g., +1234567890)</small>
+                        <span th:if="${#fields.hasErrors('mobileNumber')}"
+                              th:errors="*{mobileNumber}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="role-new">Role *</label>
-                        <select id="role-new" name="role" required>
-                            <option value="USER" th:selected="${user.role == null || user.role.name() == 'USER'}">USER</option>
-                            <option value="ADMIN" th:selected="${user.role != null && user.role.name() == 'ADMIN'}">ADMIN</option>
+                        <select id="role-new" th:field="*{role}" required>
+                            <option value="USER">USER</option>
+                            <option value="ADMIN">ADMIN</option>
                         </select>
+                        <span th:if="${#fields.hasErrors('role')}"
+                              th:errors="*{role}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="totalPoints-new">Total Points</label>
-                        <input type="number" id="totalPoints-new" name="totalPoints" th:value="${user.totalPoints}" min="0" value="0">
+                        <input type="number" id="totalPoints-new" th:field="*{totalPoints}" min="0" value="0">
+                        <span th:if="${#fields.hasErrors('totalPoints')}"
+                              th:errors="*{totalPoints}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="eventCount-new">Event Count</label>
-                        <input type="number" id="eventCount-new" name="eventCount" th:value="${user.eventCount}" min="0" value="0">
+                        <input type="number" id="eventCount-new" th:field="*{eventCount}" min="0" value="0">
+                        <span th:if="${#fields.hasErrors('eventCount')}"
+                              th:errors="*{eventCount}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="workingHours-new">Working Hours</label>
-                        <input type="number" id="workingHours-new" name="workingHours" th:value="${user.workingHours}" min="0" value="0">
+                        <input type="number" id="workingHours-new" th:field="*{workingHours}" min="0" value="0">
+                        <span th:if="${#fields.hasErrors('workingHours')}"
+                              th:errors="*{workingHours}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="aboutMe-new">About Me</label>
-                        <textarea id="aboutMe-new" name="aboutMe" maxlength="2000" th:text="${user.aboutMe}"></textarea>
+                        <textarea id="aboutMe-new" th:field="*{aboutMe}" maxlength="2000"></textarea>
+                        <span th:if="${#fields.hasErrors('aboutMe')}"
+                              th:errors="*{aboutMe}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="actions">
@@ -85,60 +128,104 @@
                 </form>
 
                 <!-- Edit form -->
-                <form th:if="${user.id != null}" th:action="@{/admin/users/edit/{id}(id=${user.id})}" method="post">
+                <form th:if="${user.id != null}"
+                      th:action="@{/admin/users/edit/{id}(id=${user.id})}"
+                      th:object="${user}"
+                      method="post">
+
                     <div class="form-group">
                         <label for="email-edit">Email *</label>
-                        <input type="email" id="email-edit" name="email" th:value="${user.email}" required>
+                        <input type="email" id="email-edit" th:field="*{email}" required>
+                        <span th:if="${#fields.hasErrors('email')}"
+                              th:errors="*{email}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="password-edit">Password</label>
-                        <input type="password" id="password-edit" name="password" minlength="8">
+                        <input type="password" id="password-edit" th:field="*{password}" minlength="8">
                         <small>Leave blank to keep current password</small>
+                        <span th:if="${#fields.hasErrors('password')}"
+                              th:errors="*{password}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="fullName-edit">Full Name *</label>
-                        <input type="text" id="fullName-edit" name="fullName" th:value="${user.fullName}" required minlength="2" maxlength="100">
+                        <input type="text" id="fullName-edit" th:field="*{fullName}" required minlength="2" maxlength="100">
+                        <span th:if="${#fields.hasErrors('fullName')}"
+                              th:errors="*{fullName}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="age-edit">Age</label>
-                        <input type="number" id="age-edit" name="age" th:value="${user.age}" min="0" max="150">
+                        <input type="number" id="age-edit" th:field="*{age}" min="0" max="150">
+                        <span th:if="${#fields.hasErrors('age')}"
+                              th:errors="*{age}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="mobileNumber-edit">Mobile Number</label>
-                        <input type="tel" id="mobileNumber-edit" name="mobileNumber" th:value="${user.mobileNumber}" pattern="^\+?[1-9]\d{1,14}$">
+                        <input type="tel" id="mobileNumber-edit" th:field="*{mobileNumber}">
                         <small>E.164 format (e.g., +1234567890)</small>
+                        <span th:if="${#fields.hasErrors('mobileNumber')}"
+                              th:errors="*{mobileNumber}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="role-edit">Role *</label>
-                        <select id="role-edit" name="role" required>
-                            <option value="USER" th:selected="${user.role != null && user.role.name() == 'USER'}">USER</option>
-                            <option value="ADMIN" th:selected="${user.role != null && user.role.name() == 'ADMIN'}">ADMIN</option>
+                        <select id="role-edit" th:field="*{role}" required>
+                            <option value="USER">USER</option>
+                            <option value="ADMIN">ADMIN</option>
                         </select>
+                        <span th:if="${#fields.hasErrors('role')}"
+                              th:errors="*{role}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="totalPoints-edit">Total Points</label>
-                        <input type="number" id="totalPoints-edit" name="totalPoints" th:value="${user.totalPoints}" min="0">
+                        <input type="number" id="totalPoints-edit" th:field="*{totalPoints}" min="0">
+                        <span th:if="${#fields.hasErrors('totalPoints')}"
+                              th:errors="*{totalPoints}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="eventCount-edit">Event Count</label>
-                        <input type="number" id="eventCount-edit" name="eventCount" th:value="${user.eventCount}" min="0">
+                        <input type="number" id="eventCount-edit" th:field="*{eventCount}" min="0">
+                        <span th:if="${#fields.hasErrors('eventCount')}"
+                              th:errors="*{eventCount}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="workingHours-edit">Working Hours</label>
-                        <input type="number" id="workingHours-edit" name="workingHours" th:value="${user.workingHours}" min="0">
+                        <input type="number" id="workingHours-edit" th:field="*{workingHours}" min="0">
+                        <span th:if="${#fields.hasErrors('workingHours')}"
+                              th:errors="*{workingHours}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="aboutMe-edit">About Me</label>
-                        <textarea id="aboutMe-edit" name="aboutMe" maxlength="2000" th:text="${user.aboutMe}"></textarea>
+                        <textarea id="aboutMe-edit" th:field="*{aboutMe}" maxlength="2000"></textarea>
+                        <span th:if="${#fields.hasErrors('aboutMe')}"
+                              th:errors="*{aboutMe}"
+                              class="error"
+                              style="color: red; font-size: 0.875rem;"></span>
                     </div>
 
                     <div class="actions">

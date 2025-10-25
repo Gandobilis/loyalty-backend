@@ -203,7 +203,6 @@ public class AdminService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
 
-        // Check if email is being changed and if it already exists
         if (!user.getEmail().equals(userFormDTO.getEmail())) {
             if (userRepository.findByEmail(userFormDTO.getEmail()).isPresent()) {
                 throw new IllegalArgumentException("Email already exists");
