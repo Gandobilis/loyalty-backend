@@ -45,6 +45,8 @@ public class AdminViewController {
     private final EventService eventService;
     private final EventRepository eventRepository;
 
+
+
     /**
      * Admin Dashboard - Main page with statistics
      */
@@ -115,6 +117,7 @@ public class AdminViewController {
             @RequestParam(value = "logoFile", required = false) MultipartFile logoFile,
             RedirectAttributes redirectAttributes) {
         try {
+            System.out.println(logoFile.getName());
             companyService.updateCompany(id, company, logoFile);
             redirectAttributes.addFlashAttribute("successMessage", "Company updated successfully!");
             return "redirect:/admin/companies";
@@ -410,7 +413,7 @@ public class AdminViewController {
 
         Page<Event> eventsPage = eventService.getFilteredEvents(filter, pageable);
 
-        model.addAttribute("events", eventsPage.getContent());
+        model.addAttribute("events",eventsPage.getContent());
         model.addAttribute("categories", EventCategory.values());
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", eventsPage.getTotalPages());

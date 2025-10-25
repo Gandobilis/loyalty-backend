@@ -7,45 +7,55 @@
     <style th:replace="~{fragments/styles :: admin-styles}"></style>
 </head>
 <body>
-    <div class="header">
-        <h1>Loyalty Backend - Admin Panel</h1>
-    </div>
+<div class="header">
+    <h1>Loyalty Backend - Admin Panel</h1>
+</div>
 
-    <div class="container">
-        <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+<div class="container">
+    <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
 
-        <main class="main-content">
-            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
-            <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+    <main class="main-content">
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
 
-            <h2 th:text="${company.id != null ? 'Edit Company' : 'New Company'}">Company Form</h2>
+        <h2 th:text="${company.id != null ? 'Edit Company' : 'New Company'}">Company Form</h2>
 
-            <div class="card">
-                <form th:action="${company.id != null ? '/admin/companies/edit/' + company.id : '/admin/companies/new'}"
-                      method="post" enctype="multipart/form-data">
+        <div class="card">
+            <form th:action="${company.id != null ? '/admin/companies/edit/' + company.id : '/admin/companies/new'}"
+                  method="post" enctype="multipart/form-data">
 
-                    <div class="form-group">
-                        <label for="name">Company Name *</label>
-                        <input type="text" id="name" name="name" th:value="${company.name}" required>
-                    </div>
+                <div class="form-group">
+                    <label for="name">Company Name *</label>
+                    <input type="text" id="name" name="name" th:value="${company.name}" required>
+                </div>
 
-                    <div class="form-group">
-                        <label for="logoFile">Logo Image</label>
-                        <input type="file" id="logoFile" name="logoFile" accept="image/*">
-                        <small style="color: #7f8c8d;" th:if="${company.logoFileName}">
-                            Current: <span th:text="${company.logoFileName}"></span>
-                        </small>
-                    </div>
+                <div class="form-group">
+                    <label for="logoFile">Logo Image</label>
+                    <input type="file" id="logoFile" name="logoFile" accept="image/*">
 
-                    <div class="actions">
-                        <button type="submit" class="btn btn-primary">
-                            <span th:text="${company.id != null ? 'Update' : 'Create'}">Submit</span>
-                        </button>
-                        <a th:href="@{/admin/companies}" class="btn btn-secondary">Cancel</a>
-                    </div>
-                </form>
-            </div>
-        </main>
-    </div>
+                    <small style="color: #7f8c8d;">
+                        <span th:if="${company.logoFileName != null}">
+                            Current:
+                            <img th:src="${company.logoFileName}"
+                                 alt="Company logo"
+                                 style="max-height: 80px; margin-left: 8px; vertical-align: middle; border-radius: 8px;">
+                        </span>
+                        <span th:unless="${company.logoFileName != null}">
+            No logo uploaded yet.
+        </span>
+                    </small>
+                </div>
+
+
+                <div class="actions">
+                    <button type="submit" class="btn btn-primary">
+                        <span th:text="${company.id != null ? 'Update' : 'Create'}">Submit</span>
+                    </button>
+                    <a th:href="@{/admin/companies}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
 </body>
 </html>
