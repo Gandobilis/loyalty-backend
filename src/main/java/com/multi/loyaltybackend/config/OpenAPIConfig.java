@@ -8,21 +8,51 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.servers.Server;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 
 @Configuration
 public class OpenAPIConfig {
 
-    @Value("${app.server.url}")
-    private String serverUrl;
+    private static final Logger log = LoggerFactory.getLogger(OpenAPIConfig.class);
+
+    @Value("${server.port:8080}")
+    private String serverPort;
+
+    @Value("${app.server.url:#{null}}")
+    private String configuredServerUrl;
+
+    @Bean
+    public String appServerUrl() {
+        // If app.server.url is explicitly configured, use it
+        if (configuredServerUrl != null && !configuredServerUrl.isEmpty()) {
+            log.info("Using configured server URL: {}", configuredServerUrl);
+            return configuredServerUrl;
+        }
+
+        // Otherwise, detect dynamically
+        try {
+            String ip = InetAddress.getLocalHost().getHostAddress();
+            String dynamicUrl = "http://" + ip + ":" + serverPort;
+            log.info("Dynamically detected server URL: {}", dynamicUrl);
+            return dynamicUrl;
+        } catch (UnknownHostException e) {
+            log.error("Failed to detect IP address, falling back to localhost", e);
+            return "http://localhost:" + serverPort;
+        }
+    }
 
     @Bean
     public OpenAPI customOpenAPI() {
         final String securitySchemeName = "bearerAuth";
+        String serverUrl = appServerUrl(); // Call the method directly
 
         return new OpenAPI()
                 .info(new Info()
@@ -38,7 +68,7 @@ public class OpenAPIConfig {
                 .servers(List.of(
                         new Server()
                                 .url(serverUrl)
-                                .description("Server URL")))
+                                .description("Dynamic Server URL")))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName,
