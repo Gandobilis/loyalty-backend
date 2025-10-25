@@ -17,6 +17,7 @@ import com.multi.loyaltybackend.voucher.repository.VoucherRepository;
 import com.multi.loyaltybackend.voucher.model.Voucher;
 import com.multi.loyaltybackend.voucher.specification.VoucherSpecifications;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -183,9 +184,9 @@ public class VoucherService {
     }
 
     @Transactional
-    public UserVoucher exchangeVoucher(Long userId, Long voucherId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+    public UserVoucher exchangeVoucher(String email, Long voucherId) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
 
         Voucher voucher = voucherRepository.findById(voucherId)
                 .orElseThrow(() -> new VoucherNotFoundException(voucherId));
@@ -196,8 +197,8 @@ public class VoucherService {
         }
 
         // Check if user has already exchanged this voucher
-        if (userVoucherRepository.existsByUserIdAndVoucherId(userId, voucherId)) {
-            throw new VoucherAlreadyExchangedException(userId, voucherId);
+        if (userVoucherRepository.existsByUserIdAndVoucherId(user.getId(), voucherId)) {
+            throw new VoucherAlreadyExchangedException(user.getId(), voucherId);
         }
 
         // Check if user has sufficient points
@@ -215,5 +216,32 @@ public class VoucherService {
         userRepository.save(user);
 
         return savedUserVoucher;
+    }
+
+    @Transactional
+    public UserVoucher redeemVoucher(String email,  Long voucherId) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
+
+        Voucher voucher = voucherRepository.findById(voucherId)
+                .orElseThrow(() -> new VoucherNotFoundException(voucherId));
+
+        // Check if voucher has expired
+        if (voucher.getExpiry() != null && voucher.getExpiry().isBefore(LocalDateTime.now())) {
+            throw new VoucherExpiredException(voucherId);
+        }
+
+        UserVoucher userVoucher = userVoucherRepository.getUserVoucherByUserIdAndVoucherId(user.getId(), voucherId)
+                .orElseThrow(() -> new RuntimeException("UserVoucherNotFoundException" + user.getId() + voucherId));
+
+
+        if (userVoucher.getStatus() == VoucherStatus.REDEEMED) {
+            throw new RuntimeException("UserVoucherAlreadyRedeemed!");
+        }
+
+        userVoucher.setStatus(VoucherStatus.REDEEMED);
+        userVoucher.setRedeemedAt(LocalDateTime.now());
+
+        return userVoucherRepository.save(userVoucher);
     }
 }
