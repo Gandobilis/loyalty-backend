@@ -127,7 +127,14 @@ public class EventService {
             }
         }
 
-        return eventRepository.findAll(spec, pageable);
+        Page<Event> events = eventRepository.findAll(spec, pageable);
+        return events.map(event -> {
+            // Map fileName to full image path
+            if (event.getFileName() != null) {
+                event.setFileName(imageStorageService.getFilePath(event.getFileName()));
+            }
+            return event;
+        });
     }
 
     /**

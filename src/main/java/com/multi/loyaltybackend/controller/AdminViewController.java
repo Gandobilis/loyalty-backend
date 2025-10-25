@@ -15,6 +15,7 @@ import com.multi.loyaltybackend.model.User;
 import com.multi.loyaltybackend.repository.EventRepository;
 import com.multi.loyaltybackend.service.AdminService;
 import com.multi.loyaltybackend.service.EventService;
+import com.multi.loyaltybackend.service.ImageStorageService;
 import com.multi.loyaltybackend.voucher.dto.VoucherFilterDTO;
 import com.multi.loyaltybackend.voucher.dto.VoucherRequest;
 import com.multi.loyaltybackend.voucher.model.Voucher;
@@ -44,6 +45,7 @@ public class AdminViewController {
     private final VoucherService voucherService;
     private final EventService eventService;
     private final EventRepository eventRepository;
+    private final ImageStorageService imageStorageService;
 
 
 
@@ -430,7 +432,10 @@ public class AdminViewController {
     }
 
     @PostMapping("/events/new")
-    public String createEvent(@ModelAttribute EventFormDTO eventForm, RedirectAttributes redirectAttributes) {
+    public String createEvent(
+            @ModelAttribute EventFormDTO eventForm,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+            RedirectAttributes redirectAttributes) {
         try {
             Event event = Event.builder()
                     .title(eventForm.getTitle())
@@ -443,6 +448,13 @@ public class AdminViewController {
                     .dateTime(eventForm.getDateTime())
                     .points(eventForm.getPoints() != null ? eventForm.getPoints() : 0)
                     .build();
+
+            // Handle image upload
+            if (imageFile != null && !imageFile.isEmpty()) {
+                String fileName = imageStorageService.storeFile(imageFile);
+                event.setFileName(fileName);
+            }
+
             eventRepository.save(event);
             redirectAttributes.addFlashAttribute("successMessage", "Event created successfully!");
             return "redirect:/admin/events";
@@ -469,6 +481,9 @@ public class AdminViewController {
                     .longitude(event.getLongitude())
                     .dateTime(event.getDateTime())
                     .points(event.getPoints())
+                    .fileName(event.getFileName() != null
+                        ? imageStorageService.getFilePath(event.getFileName())
+                        : null)
                     .build();
 
             model.addAttribute("event", formDTO);
@@ -483,6 +498,7 @@ public class AdminViewController {
     public String updateEvent(
             @PathVariable Long id,
             @ModelAttribute EventFormDTO eventForm,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             RedirectAttributes redirectAttributes) {
         try {
             Event event = eventRepository.findById(id)
@@ -497,6 +513,17 @@ public class AdminViewController {
             event.setLongitude(eventForm.getLongitude());
             event.setDateTime(eventForm.getDateTime());
             event.setPoints(eventForm.getPoints() != null ? eventForm.getPoints() : 0);
+
+            // Handle image upload
+            if (imageFile != null && !imageFile.isEmpty()) {
+                // Delete old image if exists
+                if (event.getFileName() != null) {
+                    imageStorageService.deleteFile(event.getFileName());
+                }
+                // Save new image
+                String fileName = imageStorageService.storeFile(imageFile);
+                event.setFileName(fileName);
+            }
 
             eventRepository.save(event);
             redirectAttributes.addFlashAttribute("successMessage", "Event updated successfully!");

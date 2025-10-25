@@ -22,4 +22,5 @@ public class EventFormDTO {
     private Double longitude;
     private LocalDateTime dateTime;
     private Integer points;
+    private String fileName;
 }
