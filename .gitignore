@@ -39,4 +39,4 @@ build/
 *.env
 
 ### Uploaded Files ###
-uploads/
+images/
