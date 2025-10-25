@@ -50,7 +50,8 @@ public class ImageStorageService {
             if (resource.exists() && resource.isReadable()) {
                 return serverUrl + "/api/images/" + fileName;
             } else {
-                throw new FileStorageException("File not found or not readable");
+                return null;
+//                throw new FileStorageException("File not found or not readable");
             }
         } catch (MalformedURLException e) {
             throw new InvalidFilePathException("Invalid file path: " + e.getMessage());
