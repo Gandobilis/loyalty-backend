@@ -6,6 +6,7 @@ import com.multi.loyaltybackend.dto.StatusUpdateRequest;
 import com.multi.loyaltybackend.service.RegistrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +19,11 @@ public class RegistrationController {
     private final RegistrationService registrationService;
 
     @PostMapping
-    public ResponseEntity<RegistrationResponse> registerUser(@Valid @RequestBody RegistrationRequest request) {
+    public ResponseEntity<RegistrationResponse> registerUser(
+            @Valid @RequestBody RegistrationRequest request,
+            Authentication authentication) {
         RegistrationResponse response = registrationService.registerUserToEvent(
-                request.userId(),
+                authentication.getName(),
                 request.eventId(),
                 request.comment()
         );
