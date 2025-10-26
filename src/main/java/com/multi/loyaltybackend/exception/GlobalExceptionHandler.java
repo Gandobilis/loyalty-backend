@@ -271,6 +271,68 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles email verification code errors.
+     * Returns 400 Bad Request for invalid or expired codes.
+     */
+    @ExceptionHandler({InvalidEmailVerificationCodeException.class, EmailVerificationCodeExpiredException.class})
+    public ResponseEntity<ApiResponse<Object>> handleEmailVerificationCodeException(
+            RuntimeException ex,
+            HttpServletRequest request
+    ) {
+        logException(ex, request, HttpStatus.BAD_REQUEST);
+
+        ErrorCode errorCode = ex instanceof InvalidEmailVerificationCodeException
+                ? ErrorCode.INVALID_EMAIL_VERIFICATION_CODE
+                : ErrorCode.EMAIL_VERIFICATION_CODE_EXPIRED;
+
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                errorCode.getCode(),
+                "Invalid Verification Code",
+                ex.getMessage()
+        );
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
+                .timestamp(LocalDateTime.now())
+                .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    /**
+     * Handles email not verified errors.
+     * Returns 403 Forbidden for users trying to login without verifying email.
+     */
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleEmailNotVerifiedException(
+            EmailNotVerifiedException ex,
+            HttpServletRequest request
+    ) {
+        logException(ex, request, HttpStatus.FORBIDDEN);
+
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                ErrorCode.EMAIL_NOT_VERIFIED.getCode(),
+                "Email Not Verified",
+                ex.getMessage()
+        );
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
+                .timestamp(LocalDateTime.now())
+                .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    /**
      * Handles duplicate resource conflicts.
      * Returns 409 Conflict for email duplication or voucher exchange conflicts.
      */

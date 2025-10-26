@@ -59,7 +59,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/register", "/api/auth/login",
                                 "/api/auth/forget-password", "/api/auth/reset-password",
                                 "/api/auth/forget-password-code", "/api/auth/verify-reset-code",
-                                "/api/auth/reset-password-code").permitAll()
+                                "/api/auth/reset-password-code",
+                                "/api/auth/verify-email", "/api/auth/resend-verification-code").permitAll()
                         .requestMatchers("/api/images/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()

@@ -49,6 +49,10 @@ public class User implements UserDetails {
 
     private LocalDateTime passwordResetTokenExpiry;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean emailVerified = false;
+
     private String fileName;
 
     @Builder.Default
