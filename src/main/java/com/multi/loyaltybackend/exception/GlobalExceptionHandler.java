@@ -333,6 +333,35 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles invalid current password errors.
+     * Returns 400 Bad Request when current password doesn't match.
+     */
+    @ExceptionHandler(InvalidCurrentPasswordException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidCurrentPasswordException(
+            InvalidCurrentPasswordException ex,
+            HttpServletRequest request
+    ) {
+        logException(ex, request, HttpStatus.BAD_REQUEST);
+
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                ErrorCode.INVALID_CURRENT_PASSWORD.getCode(),
+                "Invalid Password",
+                ex.getMessage()
+        );
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
+                .timestamp(LocalDateTime.now())
+                .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    /**
      * Handles duplicate resource conflicts.
      * Returns 409 Conflict for email duplication or voucher exchange conflicts.
      */

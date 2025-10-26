@@ -1,9 +1,11 @@
 package com.multi.loyaltybackend.service;
 
 import com.multi.loyaltybackend.company.model.Company;
+import com.multi.loyaltybackend.dto.ChangePasswordRequest;
 import com.multi.loyaltybackend.dto.ProfileResponse;
 import com.multi.loyaltybackend.dto.UserEventResponse;
 import com.multi.loyaltybackend.dto.UserVoucherResponse;
+import com.multi.loyaltybackend.exception.InvalidCurrentPasswordException;
 import com.multi.loyaltybackend.model.Event;
 import com.multi.loyaltybackend.model.Registration;
 import com.multi.loyaltybackend.model.User;
@@ -13,6 +15,7 @@ import com.multi.loyaltybackend.voucher.model.UserVoucher;
 import com.multi.loyaltybackend.voucher.model.Voucher;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,6 +26,7 @@ import java.util.List;
 public class ProfileService {
     private final UserRepository userRepository;
     private final ImageStorageService fileStorageService;
+    private final PasswordEncoder passwordEncoder;
     public ProfileResponse getProfile(String email) {
         User user = findUserByEmail(email);
         return mapToProfileResponseDTO(user);
@@ -120,5 +124,24 @@ public class ProfileService {
                     .companyLogoFileName(company.getLogoFileName() != null ? fileStorageService.getFilePath(company.getLogoFileName()) : null)
                     .build();
         }).toList();
+    }
+
+    @Transactional
+    public void changePassword(String email, ChangePasswordRequest request) {
+        User user = findUserByEmail(email);
+
+        // Verify current password
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new InvalidCurrentPasswordException();
+        }
+
+        // Validate new password and confirm password match
+        if (!request.newPassword().equals(request.confirmPassword())) {
+            throw new IllegalArgumentException("New password and confirm password do not match");
+        }
+
+        // Update password
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
     }
 }
