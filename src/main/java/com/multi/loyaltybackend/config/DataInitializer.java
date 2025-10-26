@@ -2,6 +2,8 @@ package com.multi.loyaltybackend.config;
 
 import com.multi.loyaltybackend.company.model.Company;
 import com.multi.loyaltybackend.company.repository.CompanyRepository;
+import com.multi.loyaltybackend.faq.model.FAQ;
+import com.multi.loyaltybackend.faq.repository.FAQRepository;
 import com.multi.loyaltybackend.model.*;
 import com.multi.loyaltybackend.repository.EventRepository;
 import com.multi.loyaltybackend.repository.RegistrationRepository;
@@ -33,6 +35,7 @@ import java.util.List;
  * - Vouchers from different companies
  * - User registrations for events
  * - User voucher exchanges
+ * - FAQs (published and unpublished)
  */
 @Slf4j
 @Component
@@ -46,6 +49,7 @@ public class DataInitializer implements CommandLineRunner {
     private final CompanyRepository companyRepository;
     private final VoucherRepository voucherRepository;
     private final UserVoucherRepository userVoucherRepository;
+    private final FAQRepository faqRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -66,6 +70,7 @@ public class DataInitializer implements CommandLineRunner {
         List<Voucher> vouchers = createVouchers(companies);
         createRegistrations(users, events);
         createUserVouchers(users, vouchers);
+        createFAQs();
 
         log.info("=== Data Initialization Complete ===");
         logSummary();
@@ -660,6 +665,171 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     /**
+     * Creates sample FAQs across different categories.
+     */
+    private void createFAQs() {
+        log.info("Creating FAQs...");
+        List<FAQ> faqs = new ArrayList<>();
+
+        // General category - published
+        faqs.add(FAQ.builder()
+                .category("General")
+                .question("What is the Loyalty Platform?")
+                .answer("The Loyalty Platform is a community-driven system that rewards users for participating in events and volunteering activities. By attending events, you earn points that can be exchanged for vouchers from our partner companies.")
+                .publish(true)
+                .build());
+
+        faqs.add(FAQ.builder()
+                .category("General")
+                .question("How do I get started?")
+                .answer("Getting started is easy! Simply create an account, complete your profile, and start browsing available events. You can register for events that interest you and earn points by participating.")
+                .publish(true)
+                .build());
+
+        faqs.add(FAQ.builder()
+                .category("General")
+                .question("Is the platform free to use?")
+                .answer("Yes! The platform is completely free for all users. There are no membership fees or hidden costs. You can participate in events and earn rewards without any charges.")
+                .publish(true)
+                .build());
+
+        // Points & Rewards category - published
+        faqs.add(FAQ.builder()
+                .category("Points & Rewards")
+                .question("How do I earn points?")
+                .answer("You earn points by participating in events. Each event has a specific point value displayed on its details page. Once you complete an event and your participation is verified, the points are automatically added to your account.")
+                .publish(true)
+                .build());
+
+        faqs.add(FAQ.builder()
+                .category("Points & Rewards")
+                .question("What can I do with my points?")
+                .answer("Points can be exchanged for vouchers from our partner companies. These vouchers offer various benefits including discounts, free products, services, and exclusive experiences. Visit the Vouchers section to see available options.")
+                .publish(true)
+                .build());
+
+        faqs.add(FAQ.builder()
+                .category("Points & Rewards")
+                .question("Do points expire?")
+                .answer("No, your earned points do not expire. They remain in your account until you decide to exchange them for vouchers. However, please note that some vouchers have expiry dates once claimed.")
+                .publish(true)
+                .build());
+
+        faqs.add(FAQ.builder()
+                .category("Points & Rewards")
+                .question("Can I transfer points to another user?")
+                .answer("Currently, points are non-transferable and tied to your individual account. This ensures fair participation and prevents abuse of the reward system.")
+                .publish(false)
+                .build());
+
+        // Events category - published
+        faqs.add(FAQ.builder()
+                .category("Events")
+                .question("How do I register for an event?")
+                .answer("Browse the events page, find an event that interests you, and click on it to view details. If you want to participate, click the 'Register' button. You'll receive a confirmation and any additional information about the event.")
+                .publish(true)
+                .build());
+
+        faqs.add(FAQ.builder()
+                .category("Events")
+                .question("Can I cancel my event registration?")
+                .answer("Yes, you can cancel your registration before the event starts. Go to your profile, find the event under 'My Registrations', and click the cancel button. Please cancel early if your plans change so others can take your spot.")
+                .publish(true)
+                .build());
+
+        faqs.add(FAQ.builder()
+                .category("Events")
+                .question("What types of events are available?")
+                .answer("We offer a diverse range of events across four main categories: Culture (art exhibitions, performances, heritage activities), Sport (marathons, tournaments, outdoor activities), Education (workshops, seminars, lectures), and Youth (programs specifically designed for young people).")
+                .publish(true)
+                .build());
+
+        faqs.add(FAQ.builder()
+                .category("Events")
+                .question("How is event attendance verified?")
+                .answer("Event organizers verify attendance through various methods including QR code scanning, sign-in sheets, or manual verification. Once verified, points are automatically credited to your account.")
+                .publish(true)
+                .build());
+
+        // Vouchers category - published
+        faqs.add(FAQ.builder()
+                .category("Vouchers")
+                .question("How do I redeem a voucher?")
+                .answer("Once you have enough points, visit the Vouchers section and select the voucher you want. Click 'Exchange' to redeem it using your points. The voucher will appear in your account with redemption instructions and a unique code.")
+                .publish(true)
+                .build());
+
+        faqs.add(FAQ.builder()
+                .category("Vouchers")
+                .question("What happens after I claim a voucher?")
+                .answer("After claiming a voucher, it will be available in your profile under 'My Vouchers'. You'll receive detailed instructions on how to use it, including any codes or steps needed for redemption at the partner company.")
+                .publish(true)
+                .build());
+
+        faqs.add(FAQ.builder()
+                .category("Vouchers")
+                .question("Can I return a voucher for points?")
+                .answer("Unfortunately, once a voucher is claimed, the transaction is final and points cannot be refunded. Please carefully review voucher details and expiry dates before redeeming.")
+                .publish(true)
+                .build());
+
+        // Account category - published
+        faqs.add(FAQ.builder()
+                .category("Account")
+                .question("How do I update my profile information?")
+                .answer("Log in to your account and navigate to the Profile section. Here you can update your personal information, profile picture, and preferences. Don't forget to save your changes.")
+                .publish(true)
+                .build());
+
+        faqs.add(FAQ.builder()
+                .category("Account")
+                .question("I forgot my password. What should I do?")
+                .answer("Click on 'Forgot Password' on the login page. Enter your email address and we'll send you instructions to reset your password. If you don't receive the email, check your spam folder or contact support.")
+                .publish(true)
+                .build());
+
+        faqs.add(FAQ.builder()
+                .category("Account")
+                .question("How do I delete my account?")
+                .answer("We're sorry to see you go! To delete your account, please contact our support team directly. Note that account deletion is permanent and will result in loss of all points and claimed vouchers.")
+                .publish(false)
+                .build());
+
+        // Technical category - published
+        faqs.add(FAQ.builder()
+                .category("Technical")
+                .question("Which browsers are supported?")
+                .answer("Our platform works best on the latest versions of Chrome, Firefox, Safari, and Edge. We recommend keeping your browser up to date for the best experience. The platform is also mobile-responsive and works on smartphones and tablets.")
+                .publish(true)
+                .build());
+
+        faqs.add(FAQ.builder()
+                .category("Technical")
+                .question("I'm experiencing technical issues. What should I do?")
+                .answer("First, try clearing your browser cache and cookies, or try accessing the platform from a different browser. If the issue persists, please contact our support team with a description of the problem and any error messages you're seeing.")
+                .publish(true)
+                .build());
+
+        // Partnership category - some unpublished
+        faqs.add(FAQ.builder()
+                .category("Partnership")
+                .question("How can my company become a partner?")
+                .answer("We're always looking for partners! If you represent a company interested in offering vouchers and supporting community activities, please contact us through the partnership inquiry form or email us at partnerships@loyalty.com")
+                .publish(true)
+                .build());
+
+        faqs.add(FAQ.builder()
+                .category("Partnership")
+                .question("Can I organize an event through the platform?")
+                .answer("Yes! If you're part of an organization or community group interested in hosting events, please reach out to us. We'll discuss your event ideas and help you get set up on the platform.")
+                .publish(false)
+                .build());
+
+        faqRepository.saveAll(faqs);
+        log.info("Created {} FAQs", faqs.size());
+    }
+
+    /**
      * Logs a summary of created data.
      */
     private void logSummary() {
@@ -681,6 +851,9 @@ public class DataInitializer implements CommandLineRunner {
         log.info("User vouchers created: {}", userVoucherRepository.count());
         log.info("  - Active: {}", userVoucherRepository.findAll().stream().filter(v -> v.getStatus() == VoucherStatus.ACTIVE).count());
         log.info("  - Redeemed: {}", userVoucherRepository.findAll().stream().filter(v -> v.getStatus() == VoucherStatus.REDEEMED).count());
+        log.info("FAQs created: {}", faqRepository.count());
+        log.info("  - Published: {}", faqRepository.findAll().stream().filter(FAQ::getPublish).count());
+        log.info("  - Unpublished: {}", faqRepository.findAll().stream().filter(f -> !f.getPublish()).count());
         log.info("===================================");
 
         // Log sample credentials for testing

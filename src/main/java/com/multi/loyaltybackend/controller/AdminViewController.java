@@ -774,7 +774,14 @@ public class AdminViewController {
     }
 
     @PostMapping("/faqs/delete/{id}")
-    public String deleteFAQ(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String deleteFAQ(
+            @PathVariable Long id,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String searchQuery,
+            @RequestParam(required = false) Boolean publish,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            RedirectAttributes redirectAttributes) {
         log.info("{} - Deleting FAQ ID: {}", LoggingConstants.ADMIN_PANEL, id);
         try {
             faqService.deleteFAQ(id);
@@ -783,11 +790,31 @@ public class AdminViewController {
             log.error("{} - Error deleting FAQ: {}", LoggingConstants.ADMIN_PANEL, e.getMessage());
             redirectAttributes.addFlashAttribute("errorMessage", "Error deleting FAQ: " + e.getMessage());
         }
-        return "redirect:/admin/faqs";
+
+        // Preserve filter parameters in redirect
+        StringBuilder redirectUrl = new StringBuilder("redirect:/admin/faqs?page=" + page + "&size=" + size);
+        if (category != null && !category.isEmpty()) {
+            redirectUrl.append("&category=").append(category);
+        }
+        if (searchQuery != null && !searchQuery.isEmpty()) {
+            redirectUrl.append("&searchQuery=").append(searchQuery);
+        }
+        if (publish != null) {
+            redirectUrl.append("&publish=").append(publish);
+        }
+
+        return redirectUrl.toString();
     }
 
     @PostMapping("/faqs/toggle-publish/{id}")
-    public String toggleFAQPublish(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String toggleFAQPublish(
+            @PathVariable Long id,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String searchQuery,
+            @RequestParam(required = false) Boolean publish,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            RedirectAttributes redirectAttributes) {
         log.info("{} - Toggling publish status for FAQ ID: {}", LoggingConstants.ADMIN_PANEL, id);
         try {
             faqService.togglePublishStatus(id);
@@ -796,6 +823,19 @@ public class AdminViewController {
             log.error("{} - Error toggling FAQ publish status: {}", LoggingConstants.ADMIN_PANEL, e.getMessage());
             redirectAttributes.addFlashAttribute("errorMessage", "Error updating FAQ: " + e.getMessage());
         }
-        return "redirect:/admin/faqs";
+
+        // Preserve filter parameters in redirect
+        StringBuilder redirectUrl = new StringBuilder("redirect:/admin/faqs?page=" + page + "&size=" + size);
+        if (category != null && !category.isEmpty()) {
+            redirectUrl.append("&category=").append(category);
+        }
+        if (searchQuery != null && !searchQuery.isEmpty()) {
+            redirectUrl.append("&searchQuery=").append(searchQuery);
+        }
+        if (publish != null) {
+            redirectUrl.append("&publish=").append(publish);
+        }
+
+        return redirectUrl.toString();
     }
 }
