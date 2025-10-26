@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${faqId != null ? 'Edit FAQ' : 'New FAQ'} + ' - Admin Panel'">FAQ Form</title>
+    <style th:replace="~{fragments/styles :: admin-styles}"></style>
+    <style>
+        /* Basic styles for demonstration, replace with your actual CSS if needed */
+        .header { background-color: #2c3e50; color: white; padding: 15px; }
+        .container { display: flex; }
+        .sidebar { width: 200px; padding: 20px; background-color: #ecf0f1; }
+        .main-content { flex-grow: 1; padding: 20px; }
+        .card { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+        .form-group input[type="text"], .form-group select, .form-group textarea {
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
+        }
+        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; }
+        .btn-success { background-color: #2ecc71; color: white; }
+        .alert-success { background-color: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #c3e6cb; }
+        .alert-error { background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #f5c6cb; }
+        .error { display: block; margin-top: 5px; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Loyalty Backend - Admin Panel</h1>
+</div>
+
+<div class="container">
+    <aside th:replace="~{fragments/sidebar :: sidebar}">
+        <nav class="sidebar">
+            <ul>
+                <li><a href="/admin/dashboard">Dashboard</a></li>
+                <li><a href="/admin/faqs">FAQs</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+        <h2 th:text="${faqId != null ? 'Edit FAQ' : 'New FAQ'}">FAQ Form</h2>
+
+        <div class="card">
+            <form th:action="${faqId != null ? '/admin/faqs/edit/' + faqId : '/admin/faqs/new'}"
+                  th:object="${faq}"
+                  method="post">
+
+                <div class="form-group">
+                    <label for="categorySelect">Category *</label>
+                    <select id="categorySelect" onchange="handleCategoryChange(this)">
+                        <option value="">-- Select Category --</option>
+                        <option th:each="cat : ${categories}"
+                                th:value="${cat}"
+                                th:text="${cat}"
+                                th:selected="${faq.category == cat}"></option>
+                        <option value="__custom__">+ Add new category</option>
+                    </select>
+
+                    <input type="text" id="customCategoryInput"
+                           placeholder="Enter new category"
+                           style="display: none; margin-top: 8px;"
+                           maxlength="100"/>
+
+                    <input type="hidden" id="category" th:field="*{category}"/>
+
+                    <small>Enter a category name or select from existing categories</small>
+                    <span th:if="${#fields.hasErrors('category')}"
+                          th:errors="*{category}"
+                          class="error"
+                          style="color: red; font-size: 0.875rem;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="question">Question *</label>
+                    <input type="text"
+                           id="question"
+                           th:field="*{question}"
+                           required
+                           maxlength="500"
+                           placeholder="Enter the frequently asked question">
+                    <span th:if="${#fields.hasErrors('question')}"
+                          th:errors="*{question}"
+                          class="error"
+                          style="color: red; font-size: 0.875rem;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="answer">Answer *</label>
+                    <textarea id="answer"
+                              th:field="*{answer}"
+                              required
+                              rows="8"
+                              placeholder="Enter the detailed answer to the question"
+                              style="resize: vertical; min-height: 150px;"></textarea>
+                    <small>You can use line breaks for formatting</small>
+                    <span th:if="${#fields.hasErrors('answer')}"
+                          th:errors="*{answer}"
+                          class="error"
+                          style="color: red; font-size: 0.875rem;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox"
+                               id="publish"
+                               th:field="*{publish}"
+                               style="width: auto; margin-right: 0.5rem;">
+                        <span style="font-weight: bold;">Publish this FAQ</span>
+                    </label>
+                    <small style="margin-left: 1.5rem; display: block; margin-top: 0.25rem;">
+                        Check this box to make the FAQ visible to users. Uncheck to keep it as a draft.
+                    </small>
+                    <span th:if="${#fields.hasErrors('publish')}"
+                          th:errors="*{publish}"
+                          class="error"
+                          style="color: red; font-size: 0.875rem;"></span>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn btn-success"
+                            th:text="${faqId != null ? 'Update FAQ' : 'Create FAQ'}">
+                        Create FAQ
+                    </button>
+                    <a th:href="@{/admin/faqs}" class="btn" style="background-color: #95a5a6;">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="card" style="margin-top: 1rem; background-color: #f8f9fa;">
+            <h3 style="margin-bottom: 1rem; color: #7f8c8d;">Preview</h3>
+            <div style="border-left: 4px solid #3498db; padding-left: 1rem;">
+                <p style="margin: 0; color: #95a5a6; font-size: 0.875rem; text-transform: uppercase;">
+                    <span id="preview-category">Category</span>
+                </p>
+                <p style="font-size: 1.125rem; font-weight: bold; margin: 0.5rem 0; color: #2c3e50;">
+                    <span id="preview-question">Your question will appear here...</span>
+                </p>
+                <p style="margin: 0; color: #34495e; line-height: 1.6;">
+                    <span id="preview-answer">Your answer will appear here...</span>
+                </p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:inline="javascript">
+    const categorySelect = document.getElementById('categorySelect');
+    const customCategoryInput = document.getElementById('customCategoryInput');
+    const categoryHiddenInput = document.getElementById('category');
+    const previewCategory = document.getElementById('preview-category');
+
+    function handleCategoryChange(select) {
+        // FIX: Check select.value instead of select.id
+        if (select.value === '__custom__') {
+            customCategoryInput.style.display = 'block';
+            customCategoryInput.required = true;
+            customCategoryInput.focus();
+            // Temporarily clear the hidden field to avoid binding '__custom__' if user doesn't type
+            categoryHiddenInput.value = '';
+        } else {
+            customCategoryInput.style.display = 'none';
+            customCategoryInput.required = false;
+            customCategoryInput.value = '';
+            // Update hidden field with selected category
+            categoryHiddenInput.value = select.value;
+        }
+        updatePreviewCategory();
+    }
+
+    function updatePreviewCategory() {
+        let categoryText = 'Category';
+        let categoryValue = '';
+
+        if (categorySelect.value === '__custom__') {
+            // If '__custom__' is selected, use the text input's value for both preview and binding value
+            categoryText = customCategoryInput.value || 'Custom Category';
+            categoryValue = customCategoryInput.value;
+        } else if (categorySelect.value) {
+            // Otherwise, use the selected option's value
+            categoryText = categorySelect.value;
+            categoryValue = categorySelect.value;
+        } else {
+            categoryText = 'Category';
+            categoryValue = '';
+        }
+
+        // Update the hidden field for form submission/binding
+        categoryHiddenInput.value = categoryValue;
+        previewCategory.textContent = categoryText;
+    }
+
+    // Live preview listeners
+    categorySelect.addEventListener('change', updatePreviewCategory);
+    customCategoryInput.addEventListener('input', updatePreviewCategory);
+
+    document.getElementById('question').addEventListener('input', function () {
+        document.getElementById('preview-question').textContent = this.value || 'Your question will appear here...';
+    });
+
+    document.getElementById('answer').addEventListener('input', function () {
+        document.getElementById('preview-answer').textContent = this.value || 'Your answer will appear here...';
+    });
+
+    // Form submission handler to ensure correct category value
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (categorySelect.value === '__custom__') {
+            const customValue = customCategoryInput.value.trim();
+            if (!customValue) {
+                e.preventDefault();
+                alert('Please enter a custom category name');
+                customCategoryInput.focus();
+                return false;
+            }
+            // Set the final, non-'__custom__' value from the text input right before submission
+            categoryHiddenInput.value = customValue;
+        } else {
+            if (!categorySelect.value) {
+                e.preventDefault();
+                alert('Please select a category');
+                categorySelect.focus();
+                return false;
+            }
+            // Ensure the correct selected value is in the hidden field
+            categoryHiddenInput.value = categorySelect.value;
+        }
+    });
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', function () {
+        // Get current category value from Thymeleaf
+        const currentCategory = /*[[${faq.category}]]*/ '';
+        const categories = /*[[${categories}]]*/ [];
+
+        if (currentCategory) {
+            let categoryFound = false;
+            // Try to find the category in the dropdown options
+            for (let i = 0; i < categorySelect.options.length; i++) {
+                if (categorySelect.options[i].value === currentCategory) {
+                    categorySelect.value = currentCategory;
+                    categoryFound = true;
+                    break;
+                }
+            }
+
+            // If category not found, assume it was a custom category entered previously
+            if (!categoryFound && currentCategory !== '__custom__' && currentCategory !== '') {
+                categorySelect.value = '__custom__'; // Select the 'Add new category' option
+                customCategoryInput.style.display = 'block';
+                customCategoryInput.required = true;
+                customCategoryInput.value = currentCategory; // Populate the input with the existing custom category
+            }
+
+            // Set the hidden input to the actual value from the model/input
+            categoryHiddenInput.value = currentCategory;
+        }
+
+        // Update preview with initial values
+        updatePreviewCategory();
+
+        const question = document.getElementById('question').value;
+        const answer = document.getElementById('answer').value;
+
+        if (question) document.getElementById('preview-question').textContent = question;
+        if (answer) document.getElementById('preview-answer').textContent = answer;
+    });
+</script>
+</body>
+</html>

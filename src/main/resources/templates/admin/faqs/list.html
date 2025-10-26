@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQs - Admin Panel</title>
+    <style th:replace="~{fragments/styles :: admin-styles}"></style>
+</head>
+<body>
+    <div class="header">
+        <h1>Loyalty Backend - Admin Panel</h1>
+    </div>
+
+    <div class="container">
+        <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+
+        <main class="main-content">
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+            <h2>FAQ Management</h2>
+
+            <div style="margin-bottom: 1rem;">
+                <a th:href="@{/admin/faqs/new}" class="btn btn-primary">+ New FAQ</a>
+            </div>
+
+            <!-- Filter Form -->
+            <div class="card" style="margin-bottom: 1rem;">
+                <h3 style="margin-bottom: 1rem;">Filter FAQs</h3>
+                <form th:action="@{/admin/faqs}" method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div>
+                        <label for="category">Category:</label>
+                        <select id="category" name="category">
+                            <option value="">All Categories</option>
+                            <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat}"
+                                    th:selected="${filter?.category == cat}"></option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="searchQuery">Search:</label>
+                        <input type="text" id="searchQuery" name="searchQuery" th:value="${filter?.searchQuery}" placeholder="Search in questions and answers...">
+                    </div>
+                    <div>
+                        <label for="publish">Status:</label>
+                        <select id="publish" name="publish">
+                            <option value="">All Status</option>
+                            <option value="true" th:selected="${filter?.publish == true}">Published</option>
+                            <option value="false" th:selected="${filter?.publish == false}">Unpublished</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: flex-end; gap: 0.5rem;">
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                        <a th:href="@{/admin/faqs}" class="btn" style="background-color: #95a5a6;">Clear</a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Category</th>
+                            <th>Question</th>
+                            <th>Answer Preview</th>
+                            <th>Status</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${faqs.isEmpty()}">
+                            <td colspan="7" style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                                No FAQs found.
+                            </td>
+                        </tr>
+                        <tr th:each="faq : ${faqs}">
+                            <td th:text="${faq.id}">1</td>
+                            <td>
+                                <span style="background-color: #3498db; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;"
+                                      th:text="${faq.category}">General</span>
+                            </td>
+                            <td th:text="${#strings.abbreviate(faq.question, 50)}">How do I earn points?</td>
+                            <td th:text="${#strings.abbreviate(faq.answer, 60)}" style="color: #7f8c8d; font-size: 0.9rem;">Answer preview...</td>
+                            <td>
+                                <form th:action="@{/admin/faqs/toggle-publish/{id}(id=${faq.id})}" method="post" style="display: inline;">
+                                    <button type="submit"
+                                            th:class="${faq.publish ? 'btn btn-sm btn-success' : 'btn btn-sm'}"
+                                            th:style="${faq.publish ? 'background-color: #27ae60;' : 'background-color: #95a5a6;'}"
+                                            th:text="${faq.publish ? 'Published' : 'Unpublished'}"
+                                            title="Click to toggle">
+                                        Published
+                                    </button>
+                                </form>
+                            </td>
+                            <td th:text="${#temporals.format(faq.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</td>
+                            <td>
+                                <a th:href="@{/admin/faqs/edit/{id}(id=${faq.id})}" class="btn btn-sm btn-primary">Edit</a>
+                                <form th:action="@{/admin/faqs/delete/{id}(id=${faq.id})}" method="post"
+                                      style="display: inline;"
+                                      onsubmit="return confirm('Are you sure you want to delete this FAQ?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Pagination -->
+                <div th:if="${totalPages > 0}" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ecf0f1;">
+                    <div>
+                        <span>Showing page <strong th:text="${currentPage + 1}">1</strong> of <strong th:text="${totalPages}">1</strong></span>
+                        <span style="margin-left: 1rem;">Total items: <strong th:text="${totalItems}">0</strong></span>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a th:if="${currentPage > 0}"
+                           th:href="@{/admin/faqs(page=${currentPage - 1}, size=${param.size != null ? param.size[0] : 10}, category=${filter?.category}, searchQuery=${filter?.searchQuery}, publish=${filter?.publish})}"
+                           class="btn btn-sm">Previous</a>
+                        <span th:if="${currentPage == 0}" class="btn btn-sm" style="opacity: 0.5; cursor: not-allowed;">Previous</span>
+
+                        <a th:if="${currentPage < totalPages - 1}"
+                           th:href="@{/admin/faqs(page=${currentPage + 1}, size=${param.size != null ? param.size[0] : 10}, category=${filter?.category}, searchQuery=${filter?.searchQuery}, publish=${filter?.publish})}"
+                           class="btn btn-sm">Next</a>
+                        <span th:if="${currentPage >= totalPages - 1}" class="btn btn-sm" style="opacity: 0.5; cursor: not-allowed;">Next</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

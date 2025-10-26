@@ -6,6 +6,11 @@ import com.multi.loyaltybackend.company.model.Company;
 import com.multi.loyaltybackend.company.service.CompanyService;
 import com.multi.loyaltybackend.config.LoggingConstants;
 import com.multi.loyaltybackend.dto.*;
+import com.multi.loyaltybackend.faq.dto.FAQFilterDTO;
+import com.multi.loyaltybackend.faq.dto.FAQRequestDTO;
+import com.multi.loyaltybackend.faq.dto.FAQResponseDTO;
+import com.multi.loyaltybackend.faq.model.FAQ;
+import com.multi.loyaltybackend.faq.service.FAQService;
 import com.multi.loyaltybackend.model.*;
 import com.multi.loyaltybackend.repository.EventRepository;
 import com.multi.loyaltybackend.service.AdminService;
@@ -45,6 +50,7 @@ public class AdminViewController {
     private final EventRepository eventRepository;
     private final ImageStorageService imageStorageService;
     private final RegistrationManagementService registrationManagementService;
+    private final FAQService faqService;
 
 
 
@@ -653,5 +659,143 @@ public class AdminViewController {
             redirectAttributes.addFlashAttribute("errorMessage", "Error deleting registration: " + e.getMessage());
         }
         return "redirect:/admin/registrations";
+    }
+
+    /**
+     * FAQ Management Pages
+     */
+    @GetMapping("/faqs")
+    public String listFAQs(
+            @ModelAttribute FAQFilterDTO filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sort,
+            @RequestParam(defaultValue = "desc") String direction,
+            Model model) {
+        log.info("{} - Listing FAQs with filter: {}", LoggingConstants.ADMIN_PANEL, filter);
+
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+
+        Page<FAQResponseDTO> faqsPage = faqService.getAllFAQs(filter, pageable);
+
+        model.addAttribute("faqs", faqsPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", faqsPage.getTotalPages());
+        model.addAttribute("totalItems", faqsPage.getTotalElements());
+        model.addAttribute("filter", filter);
+        model.addAttribute("categories", faqService.getAllCategories(false));
+        return "admin/faqs/list";
+    }
+
+    @GetMapping("/faqs/new")
+    public String newFAQForm(Model model) {
+        log.info("{} - Showing new FAQ form", LoggingConstants.ADMIN_PANEL);
+        model.addAttribute("faq", new FAQRequestDTO());
+        model.addAttribute("categories", faqService.getAllCategories(false));
+        return "admin/faqs/form";
+    }
+
+    @PostMapping("/faqs/new")
+    public String createFAQ(
+            @Valid @ModelAttribute("faq") FAQRequestDTO faqRequest,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+        log.info("{} - Creating new FAQ", LoggingConstants.ADMIN_PANEL);
+
+        if (bindingResult.hasErrors()) {
+            log.warn("{} - Validation errors in FAQ creation", LoggingConstants.ADMIN_PANEL);
+            model.addAttribute("categories", faqService.getAllCategories(false));
+            return "admin/faqs/form";
+        }
+
+        try {
+            faqService.createFAQ(faqRequest);
+            redirectAttributes.addFlashAttribute("successMessage", "FAQ created successfully!");
+            return "redirect:/admin/faqs";
+        } catch (Exception e) {
+            log.error("{} - Error creating FAQ: {}", LoggingConstants.ADMIN_PANEL, e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error creating FAQ: " + e.getMessage());
+            return "redirect:/admin/faqs/new";
+        }
+    }
+
+    @GetMapping("/faqs/edit/{id}")
+    public String editFAQForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        log.info("{} - Showing edit form for FAQ ID: {}", LoggingConstants.ADMIN_PANEL, id);
+        try {
+            FAQResponseDTO faq = faqService.getFAQById(id);
+
+            // Convert response DTO to request DTO for the form
+            FAQRequestDTO faqRequest = FAQRequestDTO.builder()
+                    .category(faq.getCategory())
+                    .question(faq.getQuestion())
+                    .answer(faq.getAnswer())
+                    .publish(faq.getPublish())
+                    .build();
+
+            model.addAttribute("faq", faqRequest);
+            model.addAttribute("faqId", id);
+            model.addAttribute("categories", faqService.getAllCategories(false));
+            return "admin/faqs/form";
+        } catch (Exception e) {
+            log.error("{} - Error loading FAQ for edit: {}", LoggingConstants.ADMIN_PANEL, e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "FAQ not found!");
+            return "redirect:/admin/faqs";
+        }
+    }
+
+    @PostMapping("/faqs/edit/{id}")
+    public String updateFAQ(
+            @PathVariable Long id,
+            @Valid @ModelAttribute("faq") FAQRequestDTO faqRequest,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+        log.info("{} - Updating FAQ ID: {}", LoggingConstants.ADMIN_PANEL, id);
+
+        if (bindingResult.hasErrors()) {
+            log.warn("{} - Validation errors in FAQ update", LoggingConstants.ADMIN_PANEL);
+            model.addAttribute("faqId", id);
+            model.addAttribute("categories", faqService.getAllCategories(false));
+            return "admin/faqs/form";
+        }
+
+        try {
+            faqService.updateFAQ(id, faqRequest);
+            redirectAttributes.addFlashAttribute("successMessage", "FAQ updated successfully!");
+            return "redirect:/admin/faqs";
+        } catch (Exception e) {
+            log.error("{} - Error updating FAQ: {}", LoggingConstants.ADMIN_PANEL, e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error updating FAQ: " + e.getMessage());
+            return "redirect:/admin/faqs";
+        }
+    }
+
+    @PostMapping("/faqs/delete/{id}")
+    public String deleteFAQ(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        log.info("{} - Deleting FAQ ID: {}", LoggingConstants.ADMIN_PANEL, id);
+        try {
+            faqService.deleteFAQ(id);
+            redirectAttributes.addFlashAttribute("successMessage", "FAQ deleted successfully!");
+        } catch (Exception e) {
+            log.error("{} - Error deleting FAQ: {}", LoggingConstants.ADMIN_PANEL, e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting FAQ: " + e.getMessage());
+        }
+        return "redirect:/admin/faqs";
+    }
+
+    @PostMapping("/faqs/toggle-publish/{id}")
+    public String toggleFAQPublish(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        log.info("{} - Toggling publish status for FAQ ID: {}", LoggingConstants.ADMIN_PANEL, id);
+        try {
+            faqService.togglePublishStatus(id);
+            redirectAttributes.addFlashAttribute("successMessage", "FAQ publish status updated!");
+        } catch (Exception e) {
+            log.error("{} - Error toggling FAQ publish status: {}", LoggingConstants.ADMIN_PANEL, e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error updating FAQ: " + e.getMessage());
+        }
+        return "redirect:/admin/faqs";
     }
 }
