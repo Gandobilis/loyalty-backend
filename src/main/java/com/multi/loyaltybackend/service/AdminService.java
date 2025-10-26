@@ -1,6 +1,7 @@
 package com.multi.loyaltybackend.service;
 
 import com.multi.loyaltybackend.company.repository.CompanyRepository;
+import com.multi.loyaltybackend.config.LoggingConstants;
 import com.multi.loyaltybackend.dto.*;
 import com.multi.loyaltybackend.exception.UserNotFoundException;
 import com.multi.loyaltybackend.mapper.UserMapper;
@@ -13,6 +14,7 @@ import com.multi.loyaltybackend.specification.UserSpecifications;
 import com.multi.loyaltybackend.voucher.repository.UserVoucherRepository;
 import com.multi.loyaltybackend.voucher.repository.VoucherRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -24,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminService {
@@ -140,8 +143,22 @@ public class AdminService {
     public UserManagementDTO updateUserRole(Long userId, Role newRole) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+
+        Role oldRole = user.getRole();
+        log.info("{} {} {} ID={} - Role change: {} -> {}",
+                LoggingConstants.ADMIN_PANEL,
+                LoggingConstants.UPDATE,
+                LoggingConstants.USER_ENTITY,
+                userId,
+                oldRole,
+                newRole);
+
         user.setRole(newRole);
         User updatedUser = userRepository.save(user);
+
+        log.info("{} Successfully updated User ID={} role to {}",
+                LoggingConstants.ADMIN_PANEL, userId, newRole);
+
         return convertToUserManagementDTO(updatedUser);
     }
 
@@ -161,8 +178,21 @@ public class AdminService {
             newPoints = 0;
         }
 
+        log.info("{} {} {} ID={} - Points adjustment: {} (total: {} -> {})",
+                LoggingConstants.ADMIN_PANEL,
+                LoggingConstants.UPDATE,
+                LoggingConstants.USER_ENTITY,
+                userId,
+                pointsToAdd > 0 ? "+" + pointsToAdd : pointsToAdd,
+                currentPoints,
+                newPoints);
+
         user.setTotalPoints(newPoints);
         User updatedUser = userRepository.save(user);
+
+        log.info("{} Successfully updated User ID={} points to {}",
+                LoggingConstants.ADMIN_PANEL, userId, newPoints);
+
         return convertToUserManagementDTO(updatedUser);
     }
 
@@ -171,8 +201,19 @@ public class AdminService {
      */
     @Transactional
     public User createUser(UserFormDTO userFormDTO) {
+        log.info("{} {} {} - Email: {}, Role: {}",
+                LoggingConstants.ADMIN_PANEL,
+                LoggingConstants.CREATE,
+                LoggingConstants.USER_ENTITY,
+                userFormDTO.getEmail(),
+                userFormDTO.getRole() != null ? userFormDTO.getRole() : Role.USER);
+
         // Check if email already exists
         if (userRepository.findByEmail(userFormDTO.getEmail()).isPresent()) {
+            log.warn("{} {} attempt failed - Email already exists: {}",
+                    LoggingConstants.ADMIN_PANEL,
+                    LoggingConstants.CREATE,
+                    userFormDTO.getEmail());
             throw new IllegalArgumentException("Email already exists");
         }
 
@@ -191,7 +232,12 @@ public class AdminService {
                 .role(userFormDTO.getRole() != null ? userFormDTO.getRole() : Role.USER)
                 .build();
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        log.info("{} Successfully created User ID={} - Email: {}",
+                LoggingConstants.ADMIN_PANEL, savedUser.getId(), savedUser.getEmail());
+
+        return savedUser;
     }
 
     /**
@@ -199,18 +245,33 @@ public class AdminService {
      */
     @Transactional
     public User updateUser(Long userId, UserFormDTO userFormDTO) {
+        log.info("{} {} {} ID={} - Email: {}, Role: {}",
+                LoggingConstants.ADMIN_PANEL,
+                LoggingConstants.UPDATE,
+                LoggingConstants.USER_ENTITY,
+                userId,
+                userFormDTO.getEmail(),
+                userFormDTO.getRole() != null ? userFormDTO.getRole() : Role.USER);
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
 
         if (!user.getEmail().equals(userFormDTO.getEmail())) {
             if (userRepository.findByEmail(userFormDTO.getEmail()).isPresent()) {
+                log.warn("{} {} attempt failed - Email already exists: {}",
+                        LoggingConstants.ADMIN_PANEL,
+                        LoggingConstants.UPDATE,
+                        userFormDTO.getEmail());
                 throw new IllegalArgumentException("Email already exists");
             }
+            log.debug("{} Email change for User ID={}: {} -> {}",
+                    LoggingConstants.ADMIN_PANEL, userId, user.getEmail(), userFormDTO.getEmail());
             user.setEmail(userFormDTO.getEmail());
         }
 
         // Only update password if a new one is provided
         if (userFormDTO.getPassword() != null && !userFormDTO.getPassword().isEmpty()) {
+            log.debug("{} Password updated for User ID={}", LoggingConstants.ADMIN_PANEL, userId);
             user.setPassword(passwordEncoder.encode(userFormDTO.getPassword()));
         }
 
@@ -223,7 +284,12 @@ public class AdminService {
         user.setAboutMe(userFormDTO.getAboutMe());
         user.setRole(userFormDTO.getRole() != null ? userFormDTO.getRole() : Role.USER);
 
-        return userRepository.save(user);
+        User updatedUser = userRepository.save(user);
+
+        log.info("{} Successfully updated User ID={} - Email: {}",
+                LoggingConstants.ADMIN_PANEL, updatedUser.getId(), updatedUser.getEmail());
+
+        return updatedUser;
     }
 
     /**
@@ -232,8 +298,24 @@ public class AdminService {
     @Transactional
     public void deleteUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> {
+                    log.warn("{} {} attempt failed - User ID={} not found",
+                            LoggingConstants.ADMIN_PANEL,
+                            LoggingConstants.DELETE,
+                            userId);
+                    return new UserNotFoundException("User not found with id: " + userId);
+                });
+
+        log.info("{} {} {} ID={} - Email: {}",
+                LoggingConstants.ADMIN_PANEL,
+                LoggingConstants.DELETE,
+                LoggingConstants.USER_ENTITY,
+                userId,
+                user.getEmail());
+
         userRepository.delete(user);
+
+        log.info("{} Successfully deleted User ID={}", LoggingConstants.ADMIN_PANEL, userId);
     }
 
     /**

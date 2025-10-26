@@ -4,6 +4,7 @@ import com.multi.loyaltybackend.company.dto.CompanyFilterDTO;
 import com.multi.loyaltybackend.company.dto.CompanyResponseDTO;
 import com.multi.loyaltybackend.company.model.Company;
 import com.multi.loyaltybackend.company.service.CompanyService;
+import com.multi.loyaltybackend.config.LoggingConstants;
 import com.multi.loyaltybackend.dto.*;
 import com.multi.loyaltybackend.model.*;
 import com.multi.loyaltybackend.repository.EventRepository;
@@ -17,6 +18,7 @@ import com.multi.loyaltybackend.voucher.model.Voucher;
 import com.multi.loyaltybackend.voucher.service.VoucherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+@Slf4j
 @Controller
 @RequestMapping("/admin")
 @RequiredArgsConstructor
@@ -433,6 +436,13 @@ public class AdminViewController {
             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             RedirectAttributes redirectAttributes) {
         try {
+            log.info("{} {} {} - Title: {}, Category: {}",
+                    LoggingConstants.ADMIN_PANEL,
+                    LoggingConstants.CREATE,
+                    LoggingConstants.EVENT_ENTITY,
+                    eventForm.getTitle(),
+                    eventForm.getCategory());
+
             Event event = Event.builder()
                     .title(eventForm.getTitle())
                     .shortDescription(eventForm.getShortDescription())
@@ -452,9 +462,17 @@ public class AdminViewController {
             }
 
             eventRepository.save(event);
+
+            log.info("{} Successfully created Event ID={} - Title: {}",
+                    LoggingConstants.ADMIN_PANEL, event.getId(), event.getTitle());
+
             redirectAttributes.addFlashAttribute("successMessage", "Event created successfully!");
             return "redirect:/admin/events";
         } catch (Exception e) {
+            log.error("{} {} failed - Error: {}",
+                    LoggingConstants.ADMIN_PANEL,
+                    LoggingConstants.CREATE,
+                    e.getMessage());
             redirectAttributes.addFlashAttribute("errorMessage", "Error creating event: " + e.getMessage());
             return "redirect:/admin/events/new";
         }
@@ -497,8 +515,22 @@ public class AdminViewController {
             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             RedirectAttributes redirectAttributes) {
         try {
+            log.info("{} {} {} ID={} - Title: {}, Category: {}",
+                    LoggingConstants.ADMIN_PANEL,
+                    LoggingConstants.UPDATE,
+                    LoggingConstants.EVENT_ENTITY,
+                    id,
+                    eventForm.getTitle(),
+                    eventForm.getCategory());
+
             Event event = eventRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Event not found"));
+                    .orElseThrow(() -> {
+                        log.warn("{} {} attempt failed - Event ID={} not found",
+                                LoggingConstants.ADMIN_PANEL,
+                                LoggingConstants.UPDATE,
+                                id);
+                        return new RuntimeException("Event not found");
+                    });
 
             event.setTitle(eventForm.getTitle());
             event.setShortDescription(eventForm.getShortDescription());
@@ -522,9 +554,17 @@ public class AdminViewController {
             }
 
             eventRepository.save(event);
+
+            log.info("{} Successfully updated Event ID={} - Title: {}",
+                    LoggingConstants.ADMIN_PANEL, event.getId(), event.getTitle());
+
             redirectAttributes.addFlashAttribute("successMessage", "Event updated successfully!");
             return "redirect:/admin/events";
         } catch (Exception e) {
+            log.error("{} {} failed - Error: {}",
+                    LoggingConstants.ADMIN_PANEL,
+                    LoggingConstants.UPDATE,
+                    e.getMessage());
             redirectAttributes.addFlashAttribute("errorMessage", "Error updating event: " + e.getMessage());
             return "redirect:/admin/events/edit/" + id;
         }
@@ -533,7 +573,7 @@ public class AdminViewController {
     @PostMapping("/events/delete/{id}")
     public String deleteEvent(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
-            eventService.deleteEvent(id);
+            eventService.deleteEvent(id, LoggingConstants.ADMIN_PANEL);
             redirectAttributes.addFlashAttribute("successMessage", "Event deleted successfully!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error deleting event: " + e.getMessage());

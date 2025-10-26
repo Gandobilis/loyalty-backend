@@ -1,5 +1,6 @@
 package com.multi.loyaltybackend.service;
 
+import com.multi.loyaltybackend.config.LoggingConstants;
 import com.multi.loyaltybackend.model.Event;
 import com.multi.loyaltybackend.model.Registration;
 import com.multi.loyaltybackend.model.User;
@@ -20,31 +21,50 @@ public class PointsAwardService {
     private final UserRepository userRepository;
 
     /**
-     * Awards event points to user when registration is completed
+     * Awards event points to user when registration is completed (Admin Panel)
      *
      * @param registration the completed registration
      */
     @Transactional
     public void awardEventPoints(Registration registration) {
+        awardEventPoints(registration, LoggingConstants.ADMIN_PANEL);
+    }
+
+    /**
+     * Awards event points to user when registration is completed
+     *
+     * @param registration the completed registration
+     * @param appId Application identifier (ADMIN_PANEL or API)
+     */
+    @Transactional
+    public void awardEventPoints(Registration registration, String appId) {
         User user = registration.getUser();
         Event event = registration.getEvent();
 
         if (!shouldAwardPoints(event)) {
-            log.debug("No points to award for event {} - points: {}", event.getId(), event.getPoints());
+            log.debug("{} No points to award for Event ID={} - points: {}",
+                    appId, event.getId(), event.getPoints());
             return;
         }
 
         int pointsAwarded = event.getPoints();
         int currentPoints = getOrDefault(user.getTotalPoints(), 0);
-        user.setTotalPoints(currentPoints + pointsAwarded);
+        int newTotalPoints = currentPoints + pointsAwarded;
+        user.setTotalPoints(newTotalPoints);
 
         int currentEventCount = getOrDefault(user.getEventCount(), 0);
         user.setEventCount(currentEventCount + 1);
 
         userRepository.save(user);
 
-        log.info("Awarded {} points to user {} for completing event {}",
-                pointsAwarded, user.getId(), event.getId());
+        log.info("{} {} - Awarded {} points to User ID={} (total: {} -> {}) for Event ID={}",
+                appId,
+                LoggingConstants.AWARD_POINTS,
+                pointsAwarded,
+                user.getId(),
+                currentPoints,
+                newTotalPoints,
+                event.getId());
     }
 
     private boolean shouldAwardPoints(Event event) {

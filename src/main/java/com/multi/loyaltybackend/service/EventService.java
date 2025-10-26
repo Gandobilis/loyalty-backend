@@ -1,6 +1,7 @@
 package com.multi.loyaltybackend.service;
 
 
+import com.multi.loyaltybackend.config.LoggingConstants;
 import com.multi.loyaltybackend.dto.EventFilterDTO;
 import com.multi.loyaltybackend.dto.EventRequestDTO;
 import com.multi.loyaltybackend.dto.EventResponseDTO;
@@ -10,6 +11,7 @@ import com.multi.loyaltybackend.repository.EventRepository;
 import com.multi.loyaltybackend.repository.EventSpecifications;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -21,6 +23,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EventService {
@@ -28,19 +31,69 @@ public class EventService {
     private final EventRepository eventRepository;
     private final ImageStorageService imageStorageService;
 
+    /**
+     * Create event (API)
+     */
     public EventResponseDTO createEvent(EventRequestDTO request, MultipartFile file) {
+        return createEvent(request, file, LoggingConstants.API);
+    }
+
+    /**
+     * Create event with app identifier
+     */
+    public EventResponseDTO createEvent(EventRequestDTO request, MultipartFile file, String appId) {
+        log.info("{} {} {} - Title: {}, Category: {}",
+                appId,
+                LoggingConstants.CREATE,
+                LoggingConstants.EVENT_ENTITY,
+                request.title(),
+                request.category());
+
         Event event = mapRequestToEntity(request);
         event = eventRepository.save(event);
+
+        log.info("{} Successfully created Event ID={} - Title: {}",
+                appId, event.getId(), event.getTitle());
+
         return mapEntityToResponse(event);
     }
 
+    /**
+     * Update event (API)
+     */
     public EventResponseDTO updateEvent(
             Long id,
             EventRequestDTO request,
             MultipartFile file
     ) {
+        return updateEvent(id, request, file, LoggingConstants.API);
+    }
+
+    /**
+     * Update event with app identifier
+     */
+    public EventResponseDTO updateEvent(
+            Long id,
+            EventRequestDTO request,
+            MultipartFile file,
+            String appId
+    ) {
+        log.info("{} {} {} ID={} - Title: {}, Category: {}",
+                appId,
+                LoggingConstants.UPDATE,
+                LoggingConstants.EVENT_ENTITY,
+                id,
+                request.title(),
+                request.category());
+
         Event existingEvent = eventRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + id));
+                .orElseThrow(() -> {
+                    log.warn("{} {} attempt failed - Event ID={} not found",
+                            appId,
+                            LoggingConstants.UPDATE,
+                            id);
+                    return new EntityNotFoundException("Event not found with ID: " + id);
+                });
 
         existingEvent.setTitle(request.title());
         existingEvent.setShortDescription(request.shortDescription());
@@ -51,6 +104,10 @@ public class EventService {
         existingEvent.setLongitude(request.longitude());
         existingEvent.setDateTime(request.dateTime());
         Event updatedEvent = eventRepository.save(existingEvent);
+
+        log.info("{} Successfully updated Event ID={} - Title: {}",
+                appId, updatedEvent.getId(), updatedEvent.getTitle());
+
         return mapEntityToResponse(updatedEvent);
     }
 
@@ -89,8 +146,36 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Delete event (API)
+     */
     public void deleteEvent(Long id) {
+        deleteEvent(id, LoggingConstants.API);
+    }
+
+    /**
+     * Delete event with app identifier
+     */
+    public void deleteEvent(Long id, String appId) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("{} {} attempt failed - Event ID={} not found",
+                            appId,
+                            LoggingConstants.DELETE,
+                            id);
+                    return new EntityNotFoundException("Event not found with ID: " + id);
+                });
+
+        log.info("{} {} {} ID={} - Title: {}",
+                appId,
+                LoggingConstants.DELETE,
+                LoggingConstants.EVENT_ENTITY,
+                id,
+                event.getTitle());
+
         eventRepository.deleteById(id);
+
+        log.info("{} Successfully deleted Event ID={}", appId, id);
     }
 
     /**

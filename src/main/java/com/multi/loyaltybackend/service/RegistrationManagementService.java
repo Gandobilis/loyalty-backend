@@ -1,5 +1,6 @@
 package com.multi.loyaltybackend.service;
 
+import com.multi.loyaltybackend.config.LoggingConstants;
 import com.multi.loyaltybackend.dto.RegistrationFilterDTO;
 import com.multi.loyaltybackend.dto.RegistrationManagementDTO;
 import com.multi.loyaltybackend.exception.RegistrationNotFoundException;
@@ -44,39 +45,86 @@ public class RegistrationManagementService {
     }
 
     /**
-     * Update registration status with business logic validation
+     * Update registration status with business logic validation (Admin Panel)
      */
     @Transactional
     public void updateRegistrationStatus(Long registrationId, RegistrationStatus newStatus) {
+        updateRegistrationStatus(registrationId, newStatus, LoggingConstants.ADMIN_PANEL);
+    }
+
+    /**
+     * Update registration status with business logic validation
+     *
+     * @param registrationId Registration ID
+     * @param newStatus New status
+     * @param appId Application identifier (ADMIN_PANEL or API)
+     */
+    @Transactional
+    public void updateRegistrationStatus(Long registrationId, RegistrationStatus newStatus, String appId) {
         Registration registration = findRegistrationById(registrationId);
         RegistrationStatus oldStatus = registration.getStatus();
 
+        log.info("{} {} {} - Status change: {} -> {}",
+                appId,
+                LoggingConstants.UPDATE,
+                LoggingConstants.REGISTRATION_ENTITY,
+                oldStatus,
+                newStatus);
+
         // Validate volunteer limit when approving
         if (isApprovingRegistration(oldStatus, newStatus)) {
+            log.debug("{} Validating volunteer limit for Event ID={}", appId, registration.getEvent().getId());
             registrationValidator.validateVolunteerLimit(registration.getEvent());
         }
 
         // Award points when completing
         if (isCompletingRegistration(oldStatus, newStatus)) {
-            pointsAwardService.awardEventPoints(registration);
+            log.info("{} {} for Registration ID={}, User ID={}",
+                    appId,
+                    LoggingConstants.AWARD_POINTS,
+                    registrationId,
+                    registration.getUser().getId());
+            pointsAwardService.awardEventPoints(registration, appId);
         }
 
         registration.setStatus(newStatus);
         registrationRepository.save(registration);
 
-        log.info("Updated registration {} status from {} to {}", registrationId, oldStatus, newStatus);
+        log.info("{} Successfully updated Registration ID={} from {} to {}",
+                appId, registrationId, oldStatus, newStatus);
+    }
+
+    /**
+     * Delete registration (Admin Panel)
+     */
+    @Transactional
+    public void deleteRegistration(Long registrationId) {
+        deleteRegistration(registrationId, LoggingConstants.ADMIN_PANEL);
     }
 
     /**
      * Delete registration
+     *
+     * @param registrationId Registration ID
+     * @param appId Application identifier (ADMIN_PANEL or API)
      */
     @Transactional
-    public void deleteRegistration(Long registrationId) {
+    public void deleteRegistration(Long registrationId, String appId) {
         if (!registrationRepository.existsById(registrationId)) {
+            log.warn("{} {} attempt failed - Registration ID={} not found",
+                    appId, LoggingConstants.DELETE, registrationId);
             throw new RegistrationNotFoundException(registrationId);
         }
+
+        log.info("{} {} {} ID={}",
+                appId,
+                LoggingConstants.DELETE,
+                LoggingConstants.REGISTRATION_ENTITY,
+                registrationId);
+
         registrationRepository.deleteById(registrationId);
-        log.info("Deleted registration {}", registrationId);
+
+        log.info("{} Successfully deleted Registration ID={}", appId, registrationId);
     }
 
     private Registration findRegistrationById(Long id) {
