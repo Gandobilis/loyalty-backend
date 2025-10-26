@@ -33,6 +33,7 @@ public enum ErrorCode {
     EMAIL_VERIFICATION_CODE_EXPIRED("EMAIL_VERIFICATION_CODE_EXPIRED", "Email verification code has expired"),
     EMAIL_NOT_VERIFIED("EMAIL_NOT_VERIFIED", "Email is not verified"),
     UNAUTHORIZED_ACCESS("UNAUTHORIZED_ACCESS", "Unauthorized access to resource"),
+    INVALID_CURRENT_PASSWORD("INVALID_CURRENT_PASSWORD", "Current password is incorrect"),
 
     // Validation Errors (400)
     VALIDATION_FAILED("VALIDATION_FAILED", "Input validation failed"),

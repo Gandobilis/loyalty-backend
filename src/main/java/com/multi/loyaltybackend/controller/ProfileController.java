@@ -1,5 +1,7 @@
 package com.multi.loyaltybackend.controller;
 
+import com.multi.loyaltybackend.dto.ApiResponse;
+import com.multi.loyaltybackend.dto.ChangePasswordRequest;
 import com.multi.loyaltybackend.dto.ProfileResponse;
 import com.multi.loyaltybackend.dto.ProfileUpdateRequest;
 import com.multi.loyaltybackend.dto.UserEventResponse;
@@ -12,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -60,5 +63,20 @@ public class ProfileController {
     public ResponseEntity<List<UserVoucherResponse>> getVouchers(Authentication authentication) {
         List<UserVoucherResponse> userVouchers = profileService.getUserVouchers(authentication.getName());
         return ResponseEntity.ok(userVouchers);
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<ApiResponse<Object>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            Authentication authentication) {
+        profileService.changePassword(authentication.getName(), request);
+
+        ApiResponse<Object> response = ApiResponse.<Object>builder()
+                .success(true)
+                .message("Password changed successfully")
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 }
