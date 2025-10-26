@@ -37,4 +37,15 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendEmailVerificationCode(String to, String code) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("Email Verification Code");
+        message.setText("Welcome! Your email verification code is: " + code + "\n\n" +
+                "This code will expire in 15 minutes.\n\n" +
+                "Please verify your email to complete your registration.");
+
+        mailSender.send(message);
+    }
 }
