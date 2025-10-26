@@ -190,6 +190,8 @@ public class DataInitializer implements CommandLineRunner {
                 .build();
         users.add(user6);
 
+        users.forEach(user -> user.setEmailVerified(true));
+
         userRepository.saveAll(users);
         log.info("Created {} users", users.size());
         return users;
