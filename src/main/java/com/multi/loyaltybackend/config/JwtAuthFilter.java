@@ -2,6 +2,9 @@ package com.multi.loyaltybackend.config;
 
 import com.multi.loyaltybackend.service.AuthService;
 import com.multi.loyaltybackend.service.JwtService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,23 +46,48 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         if (AuthService.blackList.contains(jwt)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"Token has been revoked\"}");
             return;
         }
 
-        userEmail = jwtService.extractUsername(jwt);
+        try {
+            userEmail = jwtService.extractUsername(jwt);
 
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (ExpiredJwtException e) {
+            response.setStatus(498);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Token Expired\", \"message\": \"JWT token has expired\"}");
+            return;
+        } catch (SignatureException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Invalid Token\", \"message\": \"JWT signature is invalid\"}");
+            return;
+        } catch (MalformedJwtException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Malformed Token\", \"message\": \"JWT token is malformed\"}");
+            return;
+        } catch (IllegalArgumentException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Invalid Token\", \"message\": \"JWT token is invalid\"}");
+            return;
         }
+
         filterChain.doFilter(request, response);
     }
 }
