@@ -2,6 +2,8 @@ package com.multi.loyaltybackend.dto;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,4 +17,5 @@ public class ProfileResponse {
     private Integer totalPoints;
     private Integer eventCount;
     private Integer workingHours;
+    private LocalDateTime createdAt;
 }

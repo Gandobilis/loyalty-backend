@@ -5,6 +5,7 @@ import com.multi.loyaltybackend.company.model.Company;
 import com.multi.loyaltybackend.dto.EventRequestDTO;
 import com.multi.loyaltybackend.dto.EventResponseDTO;
 import com.multi.loyaltybackend.model.Event;
+import com.multi.loyaltybackend.model.EventCategory;
 import com.multi.loyaltybackend.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +42,7 @@ public class EventController {
     }
 
 
-    @PutMapping(value =  "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<EventResponseDTO> updateEvent(
             @PathVariable Long id,
             @RequestParam("event") String eventJson,
@@ -80,5 +81,10 @@ public class EventController {
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         eventService.deleteEvent(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<List<EventCategory>> getCategories() {
+        return ResponseEntity.ok(List.of(EventCategory.values()));
     }
 }

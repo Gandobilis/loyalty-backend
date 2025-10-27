@@ -90,6 +90,7 @@ public class ProfileService {
                 .totalPoints(user.getTotalPoints())
                 .eventCount(user.getEventCount())
                 .workingHours(user.getWorkingHours())
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 
