@@ -7,6 +7,7 @@ import com.multi.loyaltybackend.dto.EventRequestDTO;
 import com.multi.loyaltybackend.dto.EventResponseDTO;
 import com.multi.loyaltybackend.dto.UserDTO;
 import com.multi.loyaltybackend.model.Event;
+import com.multi.loyaltybackend.model.RegistrationStatus;
 import com.multi.loyaltybackend.model.User;
 import com.multi.loyaltybackend.repository.EventRepository;
 import com.multi.loyaltybackend.repository.EventSpecifications;
@@ -266,6 +267,10 @@ public class EventService {
                 event.getLatitude(),
                 event.getLongitude(),
                 event.getDateTime(),
+                eventRepository.countRegistrationsForEventWithStatus(event.getId(), RegistrationStatus.PENDING),
+                eventRepository.countRegistrationsForEventWithStatus(event.getId(), RegistrationStatus.REGISTERED),
+                eventRepository.countRegistrationsForEventWithStatus(event.getId(), RegistrationStatus.COMPLETED),
+                eventRepository.countRegistrationsForEventWithStatus(event.getId(), RegistrationStatus.CANCELLED),
                 event.getMaxParticipants(),
                 event.getCreatedAt(),
                 event.getUpdatedAt(),
