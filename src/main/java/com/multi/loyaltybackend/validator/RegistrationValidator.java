@@ -34,9 +34,9 @@ public class RegistrationValidator {
 
         long activeRegistrationsCount = countActiveRegistrations(event.getId());
 
-        if (activeRegistrationsCount >= event.getVolunteer()) {
+        if (activeRegistrationsCount >= event.getMaxParticipants()) {
             throw new VolunteerLimitExceededException(
-                    String.format("Event has reached maximum volunteer limit (%d)", event.getVolunteer())
+                    String.format("Event has reached maximum volunteer limit (%d)", event.getMaxParticipants())
             );
         }
     }
@@ -45,7 +45,7 @@ public class RegistrationValidator {
      * Checks if event has a volunteer limit configured
      */
     private boolean hasVolunteerLimit(Event event) {
-        return event != null && event.getVolunteer() > 0;
+        return event != null && event.getMaxParticipants() > 0;
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.multi.loyaltybackend.dto;
 
+import com.multi.loyaltybackend.model.RegistrationStatus;
 import lombok.*;
 
 @Getter
@@ -10,4 +11,5 @@ import lombok.*;
 public class UserDTO {
     private Long id;
     private String fileName;
+    private String status;
 }

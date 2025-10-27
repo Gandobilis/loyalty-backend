@@ -7,8 +7,10 @@ import com.multi.loyaltybackend.dto.EventRequestDTO;
 import com.multi.loyaltybackend.dto.EventResponseDTO;
 import com.multi.loyaltybackend.dto.UserDTO;
 import com.multi.loyaltybackend.model.Event;
+import com.multi.loyaltybackend.model.User;
 import com.multi.loyaltybackend.repository.EventRepository;
 import com.multi.loyaltybackend.repository.EventSpecifications;
+import com.multi.loyaltybackend.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,7 @@ public class EventService {
 
     private final EventRepository eventRepository;
     private final ImageStorageService imageStorageService;
+    private final UserRepository userRepository;
 
     /**
      * Create event (API)
@@ -120,8 +123,11 @@ public class EventService {
 
 
     @Transactional(readOnly = true)
-    public List<EventResponseDTO> getAllEvents(String search, String category, LocalDate startDate, LocalDate endDate) {
+    public List<EventResponseDTO> getAllEvents(String email, String search, String category, LocalDate startDate, LocalDate endDate) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
         Specification<Event> spec = Specification.where(null);
+
 
         if (search != null) {
             spec = spec.and(EventSpecifications.searchContains(search));
@@ -139,7 +145,12 @@ public class EventService {
             spec = spec.and(EventSpecifications.dateTimeBefore(endDate.atTime(23, 59, 59)));
         }
 
-        List<Event> events = eventRepository.findAll(spec);
+        Specification<Event> baseSpec = EventSpecifications.isFutureEvent();
+        Specification<Event> combinedSpec = baseSpec.and(EventSpecifications.isNotRegisteredBy(user.getId()));
+        if (spec != null) {
+            combinedSpec = combinedSpec.and(spec);
+        }
+        List<Event> events = eventRepository.findAll(combinedSpec);
 
         return events.stream()
                 .map(this::mapEntityToResponse)
@@ -246,9 +257,7 @@ public class EventService {
     private EventResponseDTO mapEntityToResponse(Event event) {
         return new EventResponseDTO(
                 event.getId(),
-                (event.getFileName() != null
-                        ? imageStorageService.getFilePath(event.getFileName())
-                        : null),
+                (imageStorageService.getFilePath(event.getFileName())),
                 event.getTitle(),
                 event.getShortDescription(),
                 event.getDescription(),
@@ -257,13 +266,13 @@ public class EventService {
                 event.getLatitude(),
                 event.getLongitude(),
                 event.getDateTime(),
+                event.getMaxParticipants(),
                 event.getCreatedAt(),
                 event.getUpdatedAt(),
                 event.getUsers().stream().map(registration -> UserDTO.builder()
                         .id(registration.getUser().getId())
-                        .fileName(registration.getUser().getFileName() != null
-                                ? imageStorageService.getFilePath(registration.getUser().getFileName())
-                                : null)
+                        .fileName(imageStorageService.getFilePath(registration.getUser().getFileName()))
+                        .status(registration.getStatus().toString())
                         .build()).collect(Collectors.toList())
         );
     }

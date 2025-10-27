@@ -23,7 +23,7 @@ public class RegistrationMapper {
                 .eventCategory(registration.getEvent().getCategory().name())
                 .eventDateTime(registration.getEvent().getDateTime())
                 .eventPoints(registration.getEvent().getPoints())
-                .eventVolunteerLimit(registration.getEvent().getVolunteer())
+                .eventVolunteerLimit(registration.getEvent().getMaxParticipants())
                 .comment(registration.getComment())
                 .status(registration.getStatus())
                 .registeredAt(registration.getRegisteredAt())

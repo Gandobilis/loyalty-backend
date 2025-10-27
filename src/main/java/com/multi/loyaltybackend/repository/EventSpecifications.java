@@ -2,6 +2,10 @@ package com.multi.loyaltybackend.repository;
 
 import com.multi.loyaltybackend.model.Event;
 import com.multi.loyaltybackend.model.EventCategory;
+import com.multi.loyaltybackend.model.Registration;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
@@ -14,6 +18,27 @@ public class EventSpecifications {
                 return criteriaBuilder.conjunction();
             }
             return criteriaBuilder.equal(root.get("category"), EventCategory.valueOf(category.toUpperCase()));
+        };
+    }
+
+    public static Specification<Event> isFutureEvent() {
+        return (root, query, cb) ->
+                cb.greaterThan(root.get("dateTime"), LocalDateTime.now());
+    }
+
+    public static Specification<Event> isNotRegisteredBy(Long userId) {
+        return (root, query, cb) -> {
+            Subquery<Long> subquery = query.subquery(Long.class);
+            Root<Registration> registrationRoot = subquery.from(Registration.class);
+            subquery.select(registrationRoot.get("id"));
+
+            Predicate userPredicate = cb.equal(registrationRoot.get("user").get("id"), userId);
+
+            Predicate eventPredicate = cb.equal(registrationRoot.get("event"), root);
+
+            subquery.where(cb.and(userPredicate, eventPredicate));
+
+            return cb.not(cb.exists(subquery));
         };
     }
 
