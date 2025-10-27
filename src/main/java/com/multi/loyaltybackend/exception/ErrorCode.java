@@ -32,6 +32,8 @@ public enum ErrorCode {
     INVALID_EMAIL_VERIFICATION_CODE("INVALID_EMAIL_VERIFICATION_CODE", "Invalid email verification code"),
     EMAIL_VERIFICATION_CODE_EXPIRED("EMAIL_VERIFICATION_CODE_EXPIRED", "Email verification code has expired"),
     EMAIL_NOT_VERIFIED("EMAIL_NOT_VERIFIED", "Email is not verified"),
+    INVALID_REFRESH_TOKEN("INVALID_REFRESH_TOKEN", "Invalid refresh token"),
+    REFRESH_TOKEN_EXPIRED("REFRESH_TOKEN_EXPIRED", "Refresh token has expired"),
     UNAUTHORIZED_ACCESS("UNAUTHORIZED_ACCESS", "Unauthorized access to resource"),
     INVALID_CURRENT_PASSWORD("INVALID_CURRENT_PASSWORD", "Current password is incorrect"),
 

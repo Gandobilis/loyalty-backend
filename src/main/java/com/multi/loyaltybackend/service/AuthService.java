@@ -1,9 +1,11 @@
 package com.multi.loyaltybackend.service;
 
+import com.multi.loyaltybackend.dto.AuthResponse;
 import com.multi.loyaltybackend.dto.RegisterRequest;
 import com.multi.loyaltybackend.exception.*;
 import com.multi.loyaltybackend.model.EmailVerificationCode;
 import com.multi.loyaltybackend.model.PasswordResetCode;
+import com.multi.loyaltybackend.model.RefreshToken;
 import com.multi.loyaltybackend.model.Role;
 import com.multi.loyaltybackend.model.User;
 import com.multi.loyaltybackend.repository.EmailVerificationCodeRepository;
@@ -31,13 +33,14 @@ public class AuthService {
     private final EmailService emailService;
     private final PasswordResetCodeRepository passwordResetCodeRepository;
     private final EmailVerificationCodeRepository emailVerificationCodeRepository;
+    private final RefreshTokenService refreshTokenService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     // Thread-safe set for blacklisted tokens
     // TODO: Consider using Redis with TTL for production to prevent memory leaks
     public static final Set<String> blackList = ConcurrentHashMap.newKeySet();
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager, EmailService emailService, PasswordResetCodeRepository passwordResetCodeRepository, EmailVerificationCodeRepository emailVerificationCodeRepository) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager, EmailService emailService, PasswordResetCodeRepository passwordResetCodeRepository, EmailVerificationCodeRepository emailVerificationCodeRepository, RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -45,6 +48,7 @@ public class AuthService {
         this.emailService = emailService;
         this.passwordResetCodeRepository = passwordResetCodeRepository;
         this.emailVerificationCodeRepository = emailVerificationCodeRepository;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Transactional
@@ -76,7 +80,8 @@ public class AuthService {
         emailService.sendEmailVerificationCode(request.email(), code);
     }
 
-    public String login(String email, String password) {
+    @Transactional
+    public AuthResponse login(String email, String password) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password)
         );
@@ -87,11 +92,44 @@ public class AuthService {
             throw new EmailNotVerifiedException();
         }
 
-        return jwtService.generateToken(user);
+        // Generate access token
+        String accessToken = jwtService.generateToken(user);
+
+        // Generate refresh token
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+        return new AuthResponse(accessToken, refreshToken.getToken());
     }
 
+    @Transactional
     public void logout(String token) {
+        // Blacklist the access token
         blackList.add(token);
+
+        // Extract user from token and revoke their refresh token
+        String userEmail = jwtService.extractUsername(token);
+        User user = userRepository.findByEmail(userEmail).orElse(null);
+        if (user != null) {
+            refreshTokenService.revokeUserTokens(user);
+        }
+    }
+
+    @Transactional
+    public AuthResponse refreshToken(String refreshTokenStr) {
+        // Find and validate the refresh token
+        RefreshToken refreshToken = refreshTokenService.findByToken(refreshTokenStr);
+        refreshTokenService.validateToken(refreshToken);
+
+        // Get the user associated with this refresh token
+        User user = refreshToken.getUser();
+
+        // Generate new access token
+        String newAccessToken = jwtService.generateToken(user);
+
+        // Generate new refresh token (token rotation for better security)
+        RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user);
+
+        return new AuthResponse(newAccessToken, newRefreshToken.getToken());
     }
 
     public void initiatePasswordReset(String email) {

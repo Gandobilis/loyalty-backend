@@ -56,7 +56,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
-                        .requestMatchers("/api/auth/register", "/api/auth/login",
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh",
                                 "/api/auth/forget-password", "/api/auth/reset-password",
                                 "/api/auth/forget-password-code", "/api/auth/verify-reset-code",
                                 "/api/auth/reset-password-code",

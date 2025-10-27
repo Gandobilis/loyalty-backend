@@ -333,6 +333,39 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles refresh token errors.
+     * Returns 401 Unauthorized for invalid or expired refresh tokens.
+     */
+    @ExceptionHandler({InvalidRefreshTokenException.class, RefreshTokenExpiredException.class})
+    public ResponseEntity<ApiResponse<Object>> handleRefreshTokenException(
+            RuntimeException ex,
+            HttpServletRequest request
+    ) {
+        logException(ex, request, HttpStatus.UNAUTHORIZED);
+
+        ErrorCode errorCode = ex instanceof InvalidRefreshTokenException
+                ? ErrorCode.INVALID_REFRESH_TOKEN
+                : ErrorCode.REFRESH_TOKEN_EXPIRED;
+
+        ApiResponse.ErrorDetails errorDetails = new ApiResponse.ErrorDetails(
+                errorCode.getCode(),
+                "Invalid Refresh Token",
+                ex.getMessage()
+        );
+        errorDetails.setStackTrace(includeStackTrace ? getStackTrace(ex) : null);
+
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .error(errorDetails)
+                .timestamp(LocalDateTime.now())
+                .correlationId(CorrelationIdFilter.getCurrentCorrelationId())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    /**
      * Handles invalid current password errors.
      * Returns 400 Bad Request when current password doesn't match.
      */
