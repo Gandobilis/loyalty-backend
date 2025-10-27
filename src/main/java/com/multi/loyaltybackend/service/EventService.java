@@ -274,7 +274,9 @@ public class EventService {
                 event.getMaxParticipants(),
                 event.getCreatedAt(),
                 event.getUpdatedAt(),
-                event.getUsers().stream().map(registration -> UserDTO.builder()
+                event.getUsers().stream()
+                        .filter(registration -> registration.getStatus() == RegistrationStatus.REGISTERED)
+                        .map(registration -> UserDTO.builder()
                         .id(registration.getUser().getId())
                         .fileName(imageStorageService.getFilePath(registration.getUser().getFileName()))
                         .status(registration.getStatus().toString())

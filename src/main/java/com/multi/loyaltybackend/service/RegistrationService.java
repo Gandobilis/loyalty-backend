@@ -36,8 +36,9 @@ public class RegistrationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Event", "id", eventId));
 
         if (eventRegistrationRepository.existsByUserIdAndEventId(user.getId(), eventId)) {
+            Registration registration = eventRegistrationRepository.findByUserIdAndEventId(user.getId(), eventId);
             throw new DuplicateRegistrationException(
-                    String.format("User %s is already registered for event %d", email, eventId)
+                    String.format("User %s is already %s for event %d", email, registration.getStatus(), eventId)
             );
         }
 

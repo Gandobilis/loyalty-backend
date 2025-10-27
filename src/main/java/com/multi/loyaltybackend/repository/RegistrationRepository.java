@@ -10,6 +10,8 @@ import org.springframework.data.repository.query.Param;
 public interface RegistrationRepository extends JpaRepository<Registration, Long>, JpaSpecificationExecutor<Registration> {
     boolean existsByUserIdAndEventId(Long userId, Long eventId);
 
+    Registration findByUserIdAndEventId(Long userId, Long eventId);
+
     @Query("SELECT COUNT(r) FROM Registration r WHERE r.event.id = :eventId AND r.status IN :statuses")
     long countByEventIdAndStatusIn(@Param("eventId") Long eventId, @Param("statuses") java.util.List<RegistrationStatus> statuses);
 }
