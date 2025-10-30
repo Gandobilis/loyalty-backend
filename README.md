@@ -29,7 +29,69 @@ A comprehensive loyalty management system built with Spring Boot that enables or
 - Maven 3.6+
 - Git
 
+**OR for Docker:**
+- Docker 20.10+
+- Docker Compose 2.0+
+
 ## Getting Started
+
+### Option 1: Using Docker (Recommended)
+
+The easiest way to run the application is using Docker:
+
+#### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd loyalty-backend
+```
+
+#### 2. Configure Environment Variables
+
+```bash
+cp .env.docker .env
+```
+
+Edit `.env` and set your values (especially JWT_SECRET, email credentials, and OAuth2 credentials).
+
+#### 3. Start the Application
+
+```bash
+docker-compose up -d
+```
+
+This will start:
+- PostgreSQL database on port 5432
+- Spring Boot application on port 8080
+
+#### 4. View Logs
+
+```bash
+docker-compose logs -f app
+```
+
+#### 5. Stop the Application
+
+```bash
+docker-compose down
+```
+
+To remove volumes as well:
+```bash
+docker-compose down -v
+```
+
+#### Optional: Run with pgAdmin
+
+To start the application with pgAdmin for database management:
+
+```bash
+docker-compose --profile tools up -d
+```
+
+Access pgAdmin at http://localhost:5050 with credentials from `.env` file.
+
+### Option 2: Manual Setup
 
 ### 1. Clone the Repository
 
@@ -346,9 +408,79 @@ src/main/java/com/multi/loyaltybackend/
 5. **Write tests** for critical business logic
 6. **Document APIs** using Swagger annotations
 
+## Docker Commands Reference
+
+### Basic Commands
+
+```bash
+# Build and start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# View app logs only
+docker-compose logs -f app
+
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes
+docker-compose down -v
+
+# Rebuild the application image
+docker-compose build app
+
+# Restart the application
+docker-compose restart app
+
+# Access the application container shell
+docker-compose exec app sh
+
+# Access the database container shell
+docker-compose exec db psql -U loyalty_user -d loyalty_db
+```
+
+### Useful Docker Commands
+
+```bash
+# Check running containers
+docker-compose ps
+
+# View resource usage
+docker-compose stats
+
+# Remove unused images
+docker image prune -a
+
+# View application logs with timestamps
+docker-compose logs -f --timestamps app
+```
+
 ## Production Deployment
 
-Before deploying to production:
+### Docker Production Deployment
+
+For production deployment using Docker:
+
+1. ✅ Use production-ready `.env` file with strong secrets
+2. ✅ Set strong, unique `JWT_SECRET` (minimum 256-bit)
+3. ✅ Use strong `DB_PASSWORD`
+4. ✅ Set `H2_CONSOLE_ENABLED=false`
+5. ✅ Set `SQL_SHOW_SQL=false`
+6. ✅ Set `SQL_LOG_LEVEL=INFO` or `WARN`
+7. ✅ Use HTTPS/TLS for all endpoints (configure reverse proxy like nginx)
+8. ✅ Configure CORS properly
+9. ✅ Set up monitoring and logging (consider Docker logging drivers)
+10. ✅ Implement rate limiting
+11. ✅ Regular security audits
+12. ✅ Use Docker secrets or external secret management
+13. ✅ Regular backups of PostgreSQL volume
+14. ✅ Use specific image versions (avoid `latest` tags)
+
+### Traditional Deployment
+
+Before deploying to production without Docker:
 
 1. ✅ Set strong, unique `JWT_SECRET`
 2. ✅ Configure production database (PostgreSQL/MySQL)
