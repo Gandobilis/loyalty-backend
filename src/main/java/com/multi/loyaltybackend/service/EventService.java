@@ -124,7 +124,7 @@ public class EventService {
 
 
     @Transactional(readOnly = true)
-    public List<EventResponseDTO> getAllEvents(String email, String search, String category, LocalDate startDate, LocalDate endDate) {
+    public Page<EventResponseDTO> getAllEvents(String email, String search, String category, LocalDate startDate, LocalDate endDate, Pageable pageable) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
         Specification<Event> spec = Specification.where(null);
@@ -151,11 +151,9 @@ public class EventService {
         if (spec != null) {
             combinedSpec = combinedSpec.and(spec);
         }
-        List<Event> events = eventRepository.findAll(combinedSpec);
+        Page<Event> events = eventRepository.findAll(combinedSpec, pageable);
 
-        return events.stream()
-                .map(this::mapEntityToResponse)
-                .collect(Collectors.toList());
+        return events.map(this::mapEntityToResponse);
     }
 
     /**

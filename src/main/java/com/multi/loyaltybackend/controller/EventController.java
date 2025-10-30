@@ -6,6 +6,8 @@ import com.multi.loyaltybackend.dto.EventResponseDTO;
 import com.multi.loyaltybackend.model.EventCategory;
 import com.multi.loyaltybackend.service.EventService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -63,15 +65,15 @@ public class EventController {
     }
 
     @GetMapping
-    public ResponseEntity<List<EventResponseDTO>> getAllEvents(
+    public ResponseEntity<Page<EventResponseDTO>> getAllEvents(
             Authentication authentication,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            Pageable pageable
     ) {
-        List<EventResponseDTO> response = eventService.getAllEvents(authentication.getName(), search, category, startDate, endDate);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(eventService.getAllEvents(authentication.getName(), search, category, startDate, endDate, pageable));
     }
 
     @DeleteMapping("/{id}")
