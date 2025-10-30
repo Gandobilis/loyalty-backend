@@ -1,6 +1,6 @@
 package com.multi.loyaltybackend.service;
 
-import com.multi.loyaltybackend.company.repository.CompanyRepository;
+import com.multi.loyaltybackend.repository.CompanyRepository;
 import com.multi.loyaltybackend.config.LoggingConstants;
 import com.multi.loyaltybackend.dto.*;
 import com.multi.loyaltybackend.exception.UserNotFoundException;
@@ -11,8 +11,8 @@ import com.multi.loyaltybackend.repository.EventRepository;
 import com.multi.loyaltybackend.repository.RegistrationRepository;
 import com.multi.loyaltybackend.repository.UserRepository;
 import com.multi.loyaltybackend.specification.UserSpecifications;
-import com.multi.loyaltybackend.voucher.repository.UserVoucherRepository;
-import com.multi.loyaltybackend.voucher.repository.VoucherRepository;
+import com.multi.loyaltybackend.repository.UserVoucherRepository;
+import com.multi.loyaltybackend.repository.VoucherRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.*;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -60,10 +61,13 @@ public class ImageStorageService {
     public void deleteFile(String fileName) {
         try {
             Path path = storageDir.resolve(fileName).normalize();
+            List<String> defaultsFileNames = List.of("default-company.png", "default-event.png", "default-profile.png");
 
-            Files.deleteIfExists(path);
+            if (!defaultsFileNames.contains(fileName)) {
+                Files.deleteIfExists(path);
+            }
         } catch (IOException e) {
-            throw new FileStorageException("Failed to delete file", e);
+            throw new FileStorageException("ფაილის წაშლისას მოხდა შეცდომა", e);
         }
     }
 

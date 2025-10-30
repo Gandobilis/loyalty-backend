@@ -1,13 +1,10 @@
 package com.multi.loyaltybackend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.multi.loyaltybackend.company.model.Company;
 import com.multi.loyaltybackend.dto.EventRequestDTO;
 import com.multi.loyaltybackend.dto.EventResponseDTO;
-import com.multi.loyaltybackend.model.Event;
 import com.multi.loyaltybackend.model.EventCategory;
 import com.multi.loyaltybackend.service.EventService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;

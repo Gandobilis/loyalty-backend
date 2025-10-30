@@ -1,11 +1,10 @@
 package com.multi.loyaltybackend.controller;
 
-import com.multi.loyaltybackend.dto.ApiResponse;
-import com.multi.loyaltybackend.dto.ChangePasswordRequest;
-import com.multi.loyaltybackend.dto.ProfileResponse;
-import com.multi.loyaltybackend.dto.ProfileUpdateRequest;
-import com.multi.loyaltybackend.dto.UserEventResponse;
-import com.multi.loyaltybackend.dto.UserVoucherResponse;
+import com.multi.loyaltybackend.dto.request.ChangePasswordRequest;
+import com.multi.loyaltybackend.dto.response.ProfileResponse;
+import com.multi.loyaltybackend.dto.request.ProfileUpdateRequest;
+import com.multi.loyaltybackend.dto.response.UserEventResponse;
+import com.multi.loyaltybackend.dto.response.UserVoucherResponse;
 import com.multi.loyaltybackend.service.ProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,14 +13,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/profile")
 @RequiredArgsConstructor
 public class ProfileController {
-
     private final ProfileService profileService;
 
     @GetMapping
@@ -31,17 +29,13 @@ public class ProfileController {
     }
 
     @PutMapping
-    public ResponseEntity<ProfileResponse> updateProfile(
-            @Valid @RequestBody ProfileUpdateRequest update,
-            Authentication authentication) {
-        ProfileResponse updatedProfile = profileService.updateProfile(authentication.getName(), update);
+    public ResponseEntity<ProfileResponse> updateProfile(Authentication authentication, @Valid @RequestBody ProfileUpdateRequest request) {
+        ProfileResponse updatedProfile = profileService.updateProfile(authentication.getName(), request);
         return ResponseEntity.ok(updatedProfile);
     }
 
     @PostMapping("/image")
-    public ResponseEntity<ProfileResponse> uploadProfileImage(
-            @RequestParam("image") MultipartFile image,
-            Authentication authentication) {
+    public ResponseEntity<ProfileResponse> uploadProfileImage(Authentication authentication, @RequestParam("image") MultipartFile image) {
         ProfileResponse updatedProfile = profileService.uploadProfileImage(authentication.getName(), image);
         return ResponseEntity.ok(updatedProfile);
     }
@@ -66,17 +60,9 @@ public class ProfileController {
     }
 
     @PutMapping("/change-password")
-    public ResponseEntity<ApiResponse<Object>> changePassword(
-            @Valid @RequestBody ChangePasswordRequest request,
-            Authentication authentication) {
+    public ResponseEntity<Map.Entry<String, String>> changePassword(Authentication authentication, @Valid @RequestBody ChangePasswordRequest request) {
         profileService.changePassword(authentication.getName(), request);
 
-        ApiResponse<Object> response = ApiResponse.<Object>builder()
-                .success(true)
-                .message("Password changed successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.entry("message", "პაროლი შეიცვალა წარმატებით"));
     }
 }

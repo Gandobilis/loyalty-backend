@@ -1,15 +1,14 @@
 package com.multi.loyaltybackend.controller;
 
-import com.multi.loyaltybackend.company.dto.CompanyFilterDTO;
-import com.multi.loyaltybackend.company.dto.CompanyResponseDTO;
-import com.multi.loyaltybackend.company.model.Company;
-import com.multi.loyaltybackend.company.service.CompanyService;
+import com.multi.loyaltybackend.dto.CompanyFilterDTO;
+import com.multi.loyaltybackend.dto.CompanyResponseDTO;
+import com.multi.loyaltybackend.model.Company;
+import com.multi.loyaltybackend.service.CompanyService;
 import com.multi.loyaltybackend.config.LoggingConstants;
 import com.multi.loyaltybackend.dto.*;
 import com.multi.loyaltybackend.faq.dto.FAQFilterDTO;
 import com.multi.loyaltybackend.faq.dto.FAQRequestDTO;
 import com.multi.loyaltybackend.faq.dto.FAQResponseDTO;
-import com.multi.loyaltybackend.faq.model.FAQ;
 import com.multi.loyaltybackend.faq.service.FAQService;
 import com.multi.loyaltybackend.model.*;
 import com.multi.loyaltybackend.repository.EventRepository;
@@ -17,10 +16,10 @@ import com.multi.loyaltybackend.service.AdminService;
 import com.multi.loyaltybackend.service.EventService;
 import com.multi.loyaltybackend.service.ImageStorageService;
 import com.multi.loyaltybackend.service.RegistrationManagementService;
-import com.multi.loyaltybackend.voucher.dto.VoucherFilterDTO;
-import com.multi.loyaltybackend.voucher.dto.VoucherRequest;
-import com.multi.loyaltybackend.voucher.model.Voucher;
-import com.multi.loyaltybackend.voucher.service.VoucherService;
+import com.multi.loyaltybackend.dto.VoucherFilterDTO;
+import com.multi.loyaltybackend.dto.VoucherRequest;
+import com.multi.loyaltybackend.model.Voucher;
+import com.multi.loyaltybackend.service.VoucherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -172,13 +171,13 @@ public class AdminViewController {
 
     @GetMapping("/vouchers/new")
     public String newVoucherForm(Model model) {
-        model.addAttribute("voucher", new com.multi.loyaltybackend.voucher.dto.VoucherFormDTO());
+        model.addAttribute("voucher", new VoucherFormDTO());
         model.addAttribute("companies", companyService.getAllCompanies());
         return "admin/vouchers/form";
     }
 
     @PostMapping("/vouchers/new")
-    public String createVoucher(@ModelAttribute com.multi.loyaltybackend.voucher.dto.VoucherFormDTO voucherForm, RedirectAttributes redirectAttributes) {
+    public String createVoucher(@ModelAttribute VoucherFormDTO voucherForm, RedirectAttributes redirectAttributes) {
         try {
             VoucherRequest voucherRequest = new VoucherRequest(
                     voucherForm.getTitle(),
@@ -200,7 +199,7 @@ public class AdminViewController {
     public String editVoucherForm(@PathVariable Long id, Model model) {
         voucherService.getVoucherById(id).ifPresentOrElse(
                 voucher -> {
-                    com.multi.loyaltybackend.voucher.dto.VoucherFormDTO formDTO = com.multi.loyaltybackend.voucher.dto.VoucherFormDTO.builder()
+                    VoucherFormDTO formDTO = VoucherFormDTO.builder()
                             .id(voucher.getId())
                             .title(voucher.getTitle())
                             .description(voucher.getDescription())
@@ -219,7 +218,7 @@ public class AdminViewController {
     @PostMapping("/vouchers/edit/{id}")
     public String updateVoucher(
             @PathVariable Long id,
-            @ModelAttribute com.multi.loyaltybackend.voucher.dto.VoucherFormDTO voucherForm,
+            @ModelAttribute VoucherFormDTO voucherForm,
             RedirectAttributes redirectAttributes) {
         try {
             Voucher voucher = new Voucher();

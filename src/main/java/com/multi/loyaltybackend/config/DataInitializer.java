@@ -1,17 +1,17 @@
 package com.multi.loyaltybackend.config;
 
-import com.multi.loyaltybackend.company.model.Company;
-import com.multi.loyaltybackend.company.repository.CompanyRepository;
+import com.multi.loyaltybackend.model.Company;
+import com.multi.loyaltybackend.repository.CompanyRepository;
 import com.multi.loyaltybackend.faq.model.FAQ;
 import com.multi.loyaltybackend.faq.repository.FAQRepository;
 import com.multi.loyaltybackend.model.*;
 import com.multi.loyaltybackend.repository.EventRepository;
 import com.multi.loyaltybackend.repository.RegistrationRepository;
 import com.multi.loyaltybackend.repository.UserRepository;
-import com.multi.loyaltybackend.voucher.model.UserVoucher;
-import com.multi.loyaltybackend.voucher.model.Voucher;
-import com.multi.loyaltybackend.voucher.repository.UserVoucherRepository;
-import com.multi.loyaltybackend.voucher.repository.VoucherRepository;
+import com.multi.loyaltybackend.model.UserVoucher;
+import com.multi.loyaltybackend.model.Voucher;
+import com.multi.loyaltybackend.repository.UserVoucherRepository;
+import com.multi.loyaltybackend.repository.VoucherRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
