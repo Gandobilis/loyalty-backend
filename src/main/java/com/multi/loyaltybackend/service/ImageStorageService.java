@@ -39,11 +39,15 @@ public class ImageStorageService {
             Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
             return fileName;
         } catch (IOException e) {
-            throw new FileStorageException("Failed to store file", e);
+            throw new FileStorageException("ფაილის შენახვისას მოხდა შეცდომა", e);
         }
     }
 
     public String getFilePath(String fileName) {
+        if (fileName == null) {
+            return null;
+        }
+
         Path path = storageDir.resolve(fileName).normalize();
 
         try {
@@ -51,10 +55,10 @@ public class ImageStorageService {
             if (resource.exists() && resource.isReadable()) {
                 return serverUrl + "/api/images/" + fileName;
             } else {
-                throw new FileStorageException("File not found or not readable");
+                throw new FileStorageException("ფაილი ვერ მოძებნა");
             }
         } catch (MalformedURLException e) {
-            throw new InvalidFilePathException("Invalid file path: " + e.getMessage());
+            throw new InvalidFilePathException("არავალიდური გაილის მისამართი: " + e);
         }
     }
 

@@ -1,6 +1,6 @@
 package com.multi.loyaltybackend.controller;
 
-import com.multi.loyaltybackend.dto.UserVoucherRequest;
+import com.multi.loyaltybackend.dto.request.UserVoucherRequest;
 import com.multi.loyaltybackend.dto.VoucherRequest;
 import com.multi.loyaltybackend.dto.VoucherWithCompanyDTO;
 import com.multi.loyaltybackend.model.UserVoucher;
@@ -60,24 +60,14 @@ public class VoucherController {
     }
 
     @PostMapping("/exchange")
-    public ResponseEntity<UserVoucher> exchangeVoucher(
-            Authentication authentication,
-            @Valid @RequestBody UserVoucherRequest request) {
-        voucherService.exchangeVoucher(
-                authentication.getName(),
-                request.getVoucherId()
-        );
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<UserVoucher> exchangeVoucher(Authentication authentication, @Valid @RequestBody UserVoucherRequest request) {
+        UserVoucher userVoucher = voucherService.exchangeVoucher(authentication.getName(), request.voucherId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(userVoucher);
     }
 
     @PostMapping("/redeem")
-    public ResponseEntity<UserVoucher> redeemVoucher(
-            Authentication authentication,
-            @Valid @RequestBody UserVoucherRequest request) {
-        voucherService.redeemVoucher(
-                authentication.getName(),
-                request.getVoucherId()
-        );
+    public ResponseEntity<UserVoucher> redeemVoucher(Authentication authentication, @Valid @RequestBody UserVoucherRequest request) {
+        voucherService.redeemVoucher(authentication.getName(), request.voucherId());
         return ResponseEntity.noContent().build();
     }
 }

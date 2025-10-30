@@ -1,13 +1,12 @@
 package com.multi.loyaltybackend.controller;
 
 import com.multi.loyaltybackend.dto.request.ChangePasswordRequest;
-import com.multi.loyaltybackend.dto.response.ProfileResponse;
+import com.multi.loyaltybackend.dto.response.*;
 import com.multi.loyaltybackend.dto.request.ProfileUpdateRequest;
-import com.multi.loyaltybackend.dto.response.UserEventResponse;
-import com.multi.loyaltybackend.dto.response.UserVoucherResponse;
 import com.multi.loyaltybackend.service.ProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -41,21 +40,21 @@ public class ProfileController {
     }
 
     @DeleteMapping("/image")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<ProfileResponse> deleteProfileImage(Authentication authentication) {
         profileService.deleteProfileImage(authentication.getName());
-        ProfileResponse profile = profileService.getProfile(authentication.getName());
-        return ResponseEntity.ok(profile);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/events")
-    public ResponseEntity<List<UserEventResponse>> getEvents(Authentication authentication) {
-        List<UserEventResponse> userEvents = profileService.getUserEvents(authentication.getName());
+    public ResponseEntity<UserEventsWithPointsResponse> getEvents(Authentication authentication) {
+        UserEventsWithPointsResponse userEvents = profileService.getUserEvents(authentication.getName());
         return ResponseEntity.ok(userEvents);
     }
 
     @GetMapping("/vouchers")
-    public ResponseEntity<List<UserVoucherResponse>> getVouchers(Authentication authentication) {
-        List<UserVoucherResponse> userVouchers = profileService.getUserVouchers(authentication.getName());
+    public ResponseEntity<UserVouchersWithPointsResponse> getVouchers(Authentication authentication) {
+        UserVouchersWithPointsResponse userVouchers = profileService.getUserVouchers(authentication.getName());
         return ResponseEntity.ok(userVouchers);
     }
 

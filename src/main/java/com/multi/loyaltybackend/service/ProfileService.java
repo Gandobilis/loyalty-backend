@@ -1,9 +1,7 @@
 package com.multi.loyaltybackend.service;
 
 import com.multi.loyaltybackend.dto.request.ChangePasswordRequest;
-import com.multi.loyaltybackend.dto.response.ProfileResponse;
-import com.multi.loyaltybackend.dto.response.UserEventResponse;
-import com.multi.loyaltybackend.dto.response.UserVoucherResponse;
+import com.multi.loyaltybackend.dto.response.*;
 import com.multi.loyaltybackend.exception.InvalidCurrentPasswordException;
 import com.multi.loyaltybackend.mapper.ProfileMapper;
 import com.multi.loyaltybackend.mapper.UserEventMapper;
@@ -67,22 +65,28 @@ public class ProfileService {
         String fileName = user.getFileName();
 
         if (fileName != null && !fileName.isEmpty()) {
-            user.setFileName(null);
+            user.setFileName("default-profile.png");
             userRepository.save(user);
             fileStorageService.deleteFile(fileName);
         }
     }
 
-    public List<UserEventResponse> getUserEvents(String email) {
+    public UserEventsWithPointsResponse getUserEvents(String email) {
         User user = findUserByEmail(email);
         List<Registration> registrations = user.getRegistrations();
-        return userEventMapper.toResponseList(registrations);
+        return UserEventsWithPointsResponse.builder()
+                .points(user.getTotalPoints())
+                .events(userEventMapper.toResponseList(registrations))
+                .build();
     }
 
-    public List<UserVoucherResponse> getUserVouchers(String email) {
+    public UserVouchersWithPointsResponse getUserVouchers(String email) {
         User user = findUserByEmail(email);
         List<UserVoucher> vouchers = user.getUserVouchers();
-        return userVoucherMapper.toResponseList(vouchers);
+        return UserVouchersWithPointsResponse.builder()
+                .points(user.getTotalPoints())
+                .vouchers(userVoucherMapper.toResponseList(vouchers))
+                .build();
     }
 
     @Transactional
