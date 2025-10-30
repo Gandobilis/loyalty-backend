@@ -1,18 +1,14 @@
 package com.multi.loyaltybackend.service;
 
-import com.multi.loyaltybackend.model.Company;
+import com.multi.loyaltybackend.model.*;
 import com.multi.loyaltybackend.repository.CompanyRepository;
 import com.multi.loyaltybackend.exception.*;
-import com.multi.loyaltybackend.model.User;
-import com.multi.loyaltybackend.model.VoucherStatus;
 import com.multi.loyaltybackend.repository.UserRepository;
 import com.multi.loyaltybackend.dto.VoucherFilterDTO;
 import com.multi.loyaltybackend.dto.VoucherRequest;
 import com.multi.loyaltybackend.dto.VoucherWithCompanyDTO;
-import com.multi.loyaltybackend.model.UserVoucher;
 import com.multi.loyaltybackend.repository.UserVoucherRepository;
 import com.multi.loyaltybackend.repository.VoucherRepository;
-import com.multi.loyaltybackend.model.Voucher;
 import com.multi.loyaltybackend.repository.VoucherSpecifications;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +21,9 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -48,8 +46,11 @@ public class VoucherService {
         return vouchers;
     }
 
-    public List<VoucherWithCompanyDTO> getAllVouchers() {
-        List<Voucher> vouchers = voucherRepository.findAll();
+    public List<VoucherWithCompanyDTO> getAllVouchers(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
+        List<Voucher> vouchers = voucherRepository.findAvailableVouchersForUser(user.getId());
 
         return vouchers.stream()
                 .map(voucher -> {
@@ -183,24 +184,21 @@ public class VoucherService {
     }
 
     @Transactional
-    public UserVoucher exchangeVoucher(String email, Long voucherId) {
+    public void exchangeVoucher(String email, Long voucherId) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(email));
 
         Voucher voucher = voucherRepository.findById(voucherId)
                 .orElseThrow(() -> new VoucherNotFoundException(voucherId));
 
-        // Check if voucher has expired
         if (voucher.getExpiry() != null && voucher.getExpiry().isBefore(LocalDateTime.now())) {
             throw new VoucherExpiredException(voucherId);
         }
 
-        // Check if user has already exchanged this voucher
         if (userVoucherRepository.existsByUserIdAndVoucherId(user.getId(), voucherId)) {
             throw new VoucherAlreadyExchangedException(user.getId(), voucherId);
         }
 
-        // Check if user has sufficient points
         if (user.getTotalPoints() < voucher.getPoints()) {
             throw new InsufficientPointsException(voucher.getPoints(), user.getTotalPoints());
         }
@@ -210,22 +208,20 @@ public class VoucherService {
                 .voucher(voucher)
                 .status(VoucherStatus.ACTIVE)
                 .build();
-        UserVoucher savedUserVoucher = userVoucherRepository.save(userVoucher);
+        userVoucherRepository.save(userVoucher);
         user.setTotalPoints(user.getTotalPoints() - voucher.getPoints());
         userRepository.save(user);
 
-        return savedUserVoucher;
     }
 
     @Transactional
-    public UserVoucher redeemVoucher(String email,  Long voucherId) {
+    public void redeemVoucher(String email, Long voucherId) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(email));
 
         Voucher voucher = voucherRepository.findById(voucherId)
                 .orElseThrow(() -> new VoucherNotFoundException(voucherId));
 
-        // Check if voucher has expired
         if (voucher.getExpiry() != null && voucher.getExpiry().isBefore(LocalDateTime.now())) {
             throw new VoucherExpiredException(voucherId);
         }
@@ -241,6 +237,6 @@ public class VoucherService {
         userVoucher.setStatus(VoucherStatus.REDEEMED);
         userVoucher.setRedeemedAt(LocalDateTime.now());
 
-        return userVoucherRepository.save(userVoucher);
+        userVoucherRepository.save(userVoucher);
     }
 }

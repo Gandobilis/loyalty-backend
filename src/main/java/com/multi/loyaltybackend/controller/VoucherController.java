@@ -23,8 +23,8 @@ public class VoucherController {
     private final VoucherService voucherService;
 
     @GetMapping
-    public ResponseEntity<List<VoucherWithCompanyDTO>> getAllVouchers() {
-        return ResponseEntity.ok(voucherService.getAllVouchers());
+    public ResponseEntity<List<VoucherWithCompanyDTO>> getAllVouchers(Authentication authentication) {
+        return ResponseEntity.ok(voucherService.getAllVouchers(authentication.getName()));
     }
 
     @GetMapping("/{id}")
@@ -60,13 +60,13 @@ public class VoucherController {
     }
 
     @PostMapping("/exchange")
-    public ResponseEntity<UserVoucher> exchangeVoucher(Authentication authentication, @Valid @RequestBody UserVoucherRequest request) {
-        UserVoucher userVoucher = voucherService.exchangeVoucher(authentication.getName(), request.voucherId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(userVoucher);
+    public ResponseEntity<Void> exchangeVoucher(Authentication authentication, @Valid @RequestBody UserVoucherRequest request) {
+        voucherService.exchangeVoucher(authentication.getName(), request.voucherId());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/redeem")
-    public ResponseEntity<UserVoucher> redeemVoucher(Authentication authentication, @Valid @RequestBody UserVoucherRequest request) {
+    public ResponseEntity<Void> redeemVoucher(Authentication authentication, @Valid @RequestBody UserVoucherRequest request) {
         voucherService.redeemVoucher(authentication.getName(), request.voucherId());
         return ResponseEntity.noContent().build();
     }

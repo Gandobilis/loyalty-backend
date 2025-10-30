@@ -62,6 +62,8 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.password()))
                 .role(request.role() == null ? Role.USER : request.role())
                 .fullName(request.fullName())
+                .fileName("default-profile.png")
+                .totalPoints(1000)
                 .emailVerified(false)
                 .build();
 
