@@ -33,6 +33,11 @@ public class FAQSpecifications {
                 predicates.add(criteriaBuilder.equal(root.get("publish"), filter.getPublish()));
             }
 
+            // Filter by popular status
+            if (filter.getPopular() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("popular"), filter.getPopular()));
+            }
+
             // Search in question and answer
             if (filter.getSearchQuery() != null && !filter.getSearchQuery().isBlank()) {
                 String searchPattern = "%" + filter.getSearchQuery().toLowerCase() + "%";
@@ -57,6 +62,14 @@ public class FAQSpecifications {
     public static Specification<FAQ> isPublished() {
         return (root, query, criteriaBuilder) ->
                 criteriaBuilder.equal(root.get("publish"), true);
+    }
+
+    /**
+     * Specification for popular FAQs only
+     */
+    public static Specification<FAQ> isPopular() {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("popular"), true);
     }
 
     /**

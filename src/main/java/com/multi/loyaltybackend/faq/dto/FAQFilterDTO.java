@@ -17,4 +17,5 @@ public class FAQFilterDTO {
     private String category;
     private String searchQuery; // Search in question and answer
     private Boolean publish;
+    private Boolean popular;
 }

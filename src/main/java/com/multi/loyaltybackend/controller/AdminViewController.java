@@ -845,6 +845,43 @@ public class AdminViewController {
         return redirectUrl.toString();
     }
 
+    @PostMapping("/faqs/toggle-popular/{id}")
+    public String toggleFAQPopular(
+            @PathVariable Long id,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String searchQuery,
+            @RequestParam(required = false) Boolean publish,
+            @RequestParam(required = false) Boolean popular,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            RedirectAttributes redirectAttributes) {
+        log.info("{} - Toggling popular status for FAQ ID: {}", LoggingConstants.ADMIN_PANEL, id);
+        try {
+            faqService.togglePopularStatus(id);
+            redirectAttributes.addFlashAttribute("successMessage", "FAQ popular status updated!");
+        } catch (Exception e) {
+            log.error("{} - Error toggling FAQ popular status: {}", LoggingConstants.ADMIN_PANEL, e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error updating FAQ: " + e.getMessage());
+        }
+
+        // Preserve filter parameters in redirect
+        StringBuilder redirectUrl = new StringBuilder("redirect:/admin/faqs?page=" + page + "&size=" + size);
+        if (category != null && !category.isEmpty()) {
+            redirectUrl.append("&category=").append(category);
+        }
+        if (searchQuery != null && !searchQuery.isEmpty()) {
+            redirectUrl.append("&searchQuery=").append(searchQuery);
+        }
+        if (publish != null) {
+            redirectUrl.append("&publish=").append(publish);
+        }
+        if (popular != null) {
+            redirectUrl.append("&popular=").append(popular);
+        }
+
+        return redirectUrl.toString();
+    }
+
     /**
      * Support Message Management Pages
      */
