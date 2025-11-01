@@ -61,7 +61,7 @@ public class SupportMessageController {
 
     // ==================== ADMIN ENDPOINTS ====================
 
-    @GetMapping("/admin/support/messages")
+    @GetMapping("/api/admin/support/messages")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all support messages (Admin)", description = "Admin can view all support messages with optional filtering")
     public ResponseEntity<Page<SupportMessageResponse>> getAllMessages(
@@ -72,7 +72,7 @@ public class SupportMessageController {
         return ResponseEntity.ok(messages);
     }
 
-    @GetMapping("/admin/support/messages/{id}")
+    @GetMapping("/api/admin/support/messages/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get support message by ID (Admin)", description = "Admin can view any support message")
     public ResponseEntity<SupportMessageResponse> getMessageByIdAdmin(
@@ -82,7 +82,7 @@ public class SupportMessageController {
         return ResponseEntity.ok(message);
     }
 
-    @PutMapping("/admin/support/messages/{id}/respond")
+    @PutMapping("/api/admin/support/messages/{id}/respond")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Respond to support message (Admin)", description = "Admin can respond to a support message")
     public ResponseEntity<SupportMessageResponse> respondToMessage(
@@ -93,7 +93,7 @@ public class SupportMessageController {
         return ResponseEntity.ok(response);
     }
 
-    @PatchMapping("/admin/support/messages/{id}/status")
+    @PatchMapping("/api/admin/support/messages/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update message status (Admin)", description = "Admin can update the status of a support message")
     public ResponseEntity<SupportMessageResponse> updateMessageStatus(
@@ -104,7 +104,7 @@ public class SupportMessageController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/admin/support/statistics")
+    @GetMapping("/api/admin/support/statistics")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get support message statistics (Admin)", description = "Admin can view statistics about support messages")
     public ResponseEntity<Map<String, Long>> getStatistics() {
