@@ -7,6 +7,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -18,9 +19,6 @@ import java.util.UUID;
 public class ImageStorageService {
 
     private final Path storageDir = Paths.get("images");
-
-    @Value("${app.server.url}")
-    private String serverUrl;
 
     public ImageStorageService() {
         try {
@@ -49,11 +47,14 @@ public class ImageStorageService {
         }
 
         Path path = storageDir.resolve(fileName).normalize();
+        String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .build()
+                .toUriString();
 
         try {
             Resource resource = new UrlResource(path.toUri());
             if (resource.exists() && resource.isReadable()) {
-                return serverUrl + "/api/images/" + fileName;
+                return baseUrl + "/api/images/" + fileName;
             } else {
                 throw new FileStorageException("ფაილი ვერ მოძებნა");
             }
