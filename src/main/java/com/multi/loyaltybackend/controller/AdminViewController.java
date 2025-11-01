@@ -20,6 +20,11 @@ import com.multi.loyaltybackend.dto.VoucherFilterDTO;
 import com.multi.loyaltybackend.dto.VoucherRequest;
 import com.multi.loyaltybackend.model.Voucher;
 import com.multi.loyaltybackend.service.VoucherService;
+import com.multi.loyaltybackend.service.SupportMessageService;
+import com.multi.loyaltybackend.dto.SupportMessageFilterDTO;
+import com.multi.loyaltybackend.dto.SupportMessageResponse;
+import com.multi.loyaltybackend.dto.RespondToSupportMessageRequest;
+import com.multi.loyaltybackend.model.SupportMessageStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +33,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -50,6 +56,7 @@ public class AdminViewController {
     private final ImageStorageService imageStorageService;
     private final RegistrationManagementService registrationManagementService;
     private final FAQService faqService;
+    private final SupportMessageService supportMessageService;
 
 
 
@@ -836,5 +843,75 @@ public class AdminViewController {
         }
 
         return redirectUrl.toString();
+    }
+
+    /**
+     * Support Message Management Pages
+     */
+    @GetMapping("/support/messages")
+    public String listSupportMessages(
+            @ModelAttribute SupportMessageFilterDTO filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sort,
+            @RequestParam(defaultValue = "desc") String direction,
+            Model model) {
+        log.info("{} - Listing Support Messages with filter: {}", LoggingConstants.ADMIN_PANEL, filter);
+
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+
+        Page<SupportMessageResponse> messagesPage = supportMessageService.getAllMessages(page, size, filter.getStatus());
+
+        model.addAttribute("messages", messagesPage.getContent());
+        model.addAttribute("statuses", SupportMessageStatus.values());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", messagesPage.getTotalPages());
+        model.addAttribute("totalItems", messagesPage.getTotalElements());
+        model.addAttribute("filter", filter);
+
+        // Add statistics
+        model.addAttribute("openCount", supportMessageService.countMessagesByStatus(SupportMessageStatus.OPEN));
+        model.addAttribute("inProgressCount", supportMessageService.countMessagesByStatus(SupportMessageStatus.IN_PROGRESS));
+        model.addAttribute("resolvedCount", supportMessageService.countMessagesByStatus(SupportMessageStatus.RESOLVED));
+        model.addAttribute("closedCount", supportMessageService.countMessagesByStatus(SupportMessageStatus.CLOSED));
+
+        return "admin/support/list";
+    }
+
+    @PostMapping("/support/messages/{id}/respond")
+    public String respondToSupportMessage(
+            @PathVariable Long id,
+            @RequestParam String response,
+            @RequestParam SupportMessageStatus status,
+            @AuthenticationPrincipal User admin,
+            RedirectAttributes redirectAttributes) {
+        log.info("{} - Responding to Support Message ID: {}", LoggingConstants.ADMIN_PANEL, id);
+        try {
+            RespondToSupportMessageRequest request = new RespondToSupportMessageRequest(response, status);
+            supportMessageService.respondToMessage(id, request, admin);
+            redirectAttributes.addFlashAttribute("successMessage", "Response sent successfully!");
+        } catch (Exception e) {
+            log.error("{} - Error responding to support message: {}", LoggingConstants.ADMIN_PANEL, e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error responding to message: " + e.getMessage());
+        }
+        return "redirect:/admin/support/messages";
+    }
+
+    @PostMapping("/support/messages/{id}/status")
+    public String updateSupportMessageStatus(
+            @PathVariable Long id,
+            @RequestParam SupportMessageStatus status,
+            @AuthenticationPrincipal User admin,
+            RedirectAttributes redirectAttributes) {
+        log.info("{} - Updating Support Message ID: {} to status: {}", LoggingConstants.ADMIN_PANEL, id, status);
+        try {
+            supportMessageService.updateMessageStatus(id, status, admin);
+            redirectAttributes.addFlashAttribute("successMessage", "Message status updated successfully!");
+        } catch (Exception e) {
+            log.error("{} - Error updating support message status: {}", LoggingConstants.ADMIN_PANEL, e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error updating status: " + e.getMessage());
+        }
+        return "redirect:/admin/support/messages";
     }
 }

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Messages - Admin Panel</title>
+    <style th:replace="~{fragments/styles :: admin-styles}"></style>
+    <style>
+        .status-badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-open {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-in_progress {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .badge-resolved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-closed {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .stat-card .count {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .message-preview {
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-info {
+            font-size: 0.875rem;
+            color: #7f8c8d;
+        }
+
+        .respond-form {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .respond-form.active {
+            display: block;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        table thead tr th {
+            padding: 1rem 0.75rem;
+            background: #34495e;
+            color: white;
+            font-weight: 600;
+            text-align: left;
+            border-bottom: 3px solid #2c3e50;
+        }
+
+        table tbody tr {
+            transition: all 0.3s ease;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        table tbody tr:hover {
+            background: linear-gradient(to right, #f8f9fa 0%, #e8f4f8 100%);
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table tbody tr td {
+            padding: 1rem 0.75rem;
+            vertical-align: middle;
+        }
+
+        .btn-small {
+            padding: 0.4rem 0.7rem;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            color: white;
+        }
+
+        .btn-small:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Loyalty Backend - Admin Panel</h1>
+</div>
+
+<div class="container">
+    <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+        <h2>Support Messages</h2>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">
+                <h3>Open</h3>
+                <div class="count" th:text="${openCount}">0</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">
+                <h3>In Progress</h3>
+                <div class="count" th:text="${inProgressCount}">0</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%);">
+                <h3>Resolved</h3>
+                <div class="count" th:text="${resolvedCount}">0</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);">
+                <h3>Closed</h3>
+                <div class="count" th:text="${closedCount}">0</div>
+            </div>
+        </div>
+
+        <!-- Filter Form -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <h3 style="margin-top: 0;">Filters</h3>
+            <form th:action="@{/admin/support/messages}" method="get" th:object="${filter}">
+                <input type="hidden" name="size" th:value="${param.size != null ? param.size[0] : 10}">
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status" name="status" th:field="*{status}">
+                            <option value="">All Statuses</option>
+                            <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <a th:href="@{/admin/support/messages}" class="btn" style="background-color: #95a5a6;">Clear</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Messages Table -->
+        <div class="card">
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Subject</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(messages)}">
+                        <td colspan="7" style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                            No support messages found
+                        </td>
+                    </tr>
+                    <tr th:each="msg : ${messages}">
+                        <td th:text="${msg.id}">1</td>
+                        <td>
+                            <div th:text="${msg.userFullName}" style="font-weight: 500;"></div>
+                            <div class="user-info" th:text="${msg.userEmail}"></div>
+                            <div class="user-info" th:text="${msg.userMobileNumber}"></div>
+                        </td>
+                        <td>
+                            <div th:text="${msg.subject}" style="font-weight: 500;"></div>
+                        </td>
+                        <td>
+                            <div class="message-preview" th:text="${msg.message}" th:title="${msg.message}"></div>
+                        </td>
+                        <td>
+                            <span class="status-badge"
+                                  th:classappend="${msg.status.name() == 'OPEN' ? 'badge-open' :
+                                                   msg.status.name() == 'IN_PROGRESS' ? 'badge-in_progress' :
+                                                   msg.status.name() == 'RESOLVED' ? 'badge-resolved' : 'badge-closed'}"
+                                  th:text="${msg.status}">
+                                Status
+                            </span>
+                        </td>
+                        <td th:text="${#temporals.format(msg.createdAt, 'MMM dd, yyyy HH:mm')}">Date</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button type="button" class="btn-small"
+                                        style="background: #3498db;"
+                                        th:onclick="'showRespondForm(' + ${msg.id} + ', \'' + ${msg.userFullName} + '\', \'' + ${msg.subject} + '\')'">
+                                    Respond
+                                </button>
+                                <button type="button" class="btn-small"
+                                        style="background: #27ae60;"
+                                        th:onclick="'viewMessage(' + ${msg.id} + ')'">
+                                    View Details
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div th:if="${totalPages > 0}" class="pagination">
+                <span>Showing <strong th:text="${messages.size()}"></strong> of
+                    <strong th:text="${totalItems}"></strong> messages</span>
+
+                <div>
+                    <a th:if="${currentPage > 0}"
+                       th:href="@{/admin/support/messages(
+                           page=${currentPage - 1},
+                           size=${param.size != null ? param.size[0] : 10},
+                           status=${filter.status}
+                       )}"
+                       class="btn-small">Previous</a>
+
+                    <span style="margin: 0 0.5rem;">
+                        Page <strong th:text="${currentPage + 1}"></strong> of
+                        <strong th:text="${totalPages}"></strong>
+                    </span>
+
+                    <a th:if="${currentPage + 1 < totalPages}"
+                       th:href="@{/admin/support/messages(
+                           page=${currentPage + 1},
+                           size=${param.size != null ? param.size[0] : 10},
+                           status=${filter.status}
+                       )}"
+                       class="btn-small">Next</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Respond Form Modal -->
+<div class="overlay" id="overlay" onclick="closeRespondForm()"></div>
+<div class="respond-form" id="respondForm">
+    <h3 id="modalTitle">Respond to Message</h3>
+    <form id="responseForm" method="post">
+        <div class="form-group">
+            <label for="responseText">Response</label>
+            <textarea id="responseText" name="response" rows="6" required
+                      style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="responseStatus">Status</label>
+            <select id="responseStatus" name="status" required
+                    style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="RESOLVED">Resolved</option>
+                <option value="CLOSED">Closed</option>
+            </select>
+        </div>
+        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+            <button type="submit" class="btn btn-primary">Send Response</button>
+            <button type="button" class="btn" style="background-color: #95a5a6;" onclick="closeRespondForm()">Cancel</button>
+        </div>
+    </form>
+</div>
+
+<!-- View Message Modal -->
+<div class="respond-form" id="viewMessageModal">
+    <h3>Message Details</h3>
+    <div id="messageDetails" style="line-height: 1.8;">
+        <!-- Details will be populated by JavaScript -->
+    </div>
+    <div style="margin-top: 1rem;">
+        <button type="button" class="btn" onclick="closeViewMessage()">Close</button>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const messages = /*[[${messages}]]*/ [];
+
+    function showRespondForm(id, userName, subject) {
+        document.getElementById('modalTitle').textContent = 'Respond to: ' + subject;
+        document.getElementById('responseForm').action = '/admin/support/messages/' + id + '/respond';
+        document.getElementById('overlay').classList.add('active');
+        document.getElementById('respondForm').classList.add('active');
+    }
+
+    function closeRespondForm() {
+        document.getElementById('overlay').classList.remove('active');
+        document.getElementById('respondForm').classList.remove('active');
+        document.getElementById('responseForm').reset();
+    }
+
+    function viewMessage(id) {
+        const message = messages.find(m => m.id === id);
+        if (!message) return;
+
+        const details = `
+            <p><strong>ID:</strong> ${message.id}</p>
+            <p><strong>User:</strong> ${message.userFullName} (${message.userEmail})</p>
+            <p><strong>Mobile:</strong> ${message.userMobileNumber || 'N/A'}</p>
+            <p><strong>Subject:</strong> ${message.subject}</p>
+            <p><strong>Message:</strong></p>
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin: 0.5rem 0;">
+                ${message.message}
+            </div>
+            <p><strong>Status:</strong> ${message.status}</p>
+            <p><strong>Created:</strong> ${new Date(message.createdAt).toLocaleString()}</p>
+            ${message.response ? `
+                <hr style="margin: 1rem 0;">
+                <p><strong>Response:</strong></p>
+                <div style="background: #e8f4f8; padding: 1rem; border-radius: 4px; margin: 0.5rem 0;">
+                    ${message.response}
+                </div>
+                <p><strong>Responded By:</strong> ${message.respondedByFullName || 'N/A'}</p>
+                <p><strong>Responded At:</strong> ${message.respondedAt ? new Date(message.respondedAt).toLocaleString() : 'N/A'}</p>
+            ` : ''}
+        `;
+
+        document.getElementById('messageDetails').innerHTML = details;
+        document.getElementById('overlay').classList.add('active');
+        document.getElementById('viewMessageModal').classList.add('active');
+    }
+
+    function closeViewMessage() {
+        document.getElementById('overlay').classList.remove('active');
+        document.getElementById('viewMessageModal').classList.remove('active');
+    }
+    /*]]>*/
+</script>
+</body>
+</html>
