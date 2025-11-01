@@ -124,7 +124,7 @@ public class EventService {
 
 
     @Transactional(readOnly = true)
-    public Page<EventResponseDTO> getAllEvents(String email, String search, String category, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+    public Page<EventResponseDTO> getAllEvents(String email, String search, List<String> categories, LocalDate startDate, LocalDate endDate, Pageable pageable) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
         Specification<Event> spec = Specification.where(null);
@@ -134,8 +134,8 @@ public class EventService {
             spec = spec.and(EventSpecifications.searchContains(search));
         }
 
-        if (category != null) {
-            spec = spec.and(EventSpecifications.hasCategory(category));
+        if (categories != null && !categories.isEmpty()) {
+            spec = spec.and(EventSpecifications.hasCategories(categories));
         }
 
         if (startDate != null) {

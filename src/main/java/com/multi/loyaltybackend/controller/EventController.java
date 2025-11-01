@@ -68,12 +68,12 @@ public class EventController {
     public ResponseEntity<Page<EventResponseDTO>> getAllEvents(
             Authentication authentication,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) String category,
+            @RequestParam(required = false) List<String> categories,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             Pageable pageable
     ) {
-        return ResponseEntity.ok(eventService.getAllEvents(authentication.getName(), search, category, startDate, endDate, pageable));
+        return ResponseEntity.ok(eventService.getAllEvents(authentication.getName(), search, categories, startDate, endDate, pageable));
     }
 
     @DeleteMapping("/{id}")

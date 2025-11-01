@@ -2,7 +2,6 @@ package com.multi.loyaltybackend.service;
 
 import com.multi.loyaltybackend.exception.FileStorageException;
 import com.multi.loyaltybackend.exception.InvalidFilePathException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;

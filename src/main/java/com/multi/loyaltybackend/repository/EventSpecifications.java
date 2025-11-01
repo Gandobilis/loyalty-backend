@@ -3,14 +3,40 @@ package com.multi.loyaltybackend.repository;
 import com.multi.loyaltybackend.model.Event;
 import com.multi.loyaltybackend.model.EventCategory;
 import com.multi.loyaltybackend.model.Registration;
+import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class EventSpecifications {
+
+    public static Specification<Event> hasCategories(List<String> categories) {
+        return (root, query, criteriaBuilder) -> {
+
+            List<EventCategory> categoryEnums = categories.stream()
+                    .map(categoryString -> {
+                        try {
+                            return EventCategory.valueOf(categoryString.toUpperCase());
+                        } catch (IllegalArgumentException e) {
+                            return null;
+                        }
+                    })
+                    .filter(java.util.Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            if (categoryEnums.isEmpty()) {
+                return criteriaBuilder.disjunction();
+            }
+
+            Path<EventCategory> categoryPath = root.get("category");
+            return categoryPath.in(categoryEnums);
+        };
+    }
 
     public static Specification<Event> hasCategory(String category) {
         return (root, query, criteriaBuilder) -> {
