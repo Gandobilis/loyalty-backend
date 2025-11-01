@@ -121,6 +121,23 @@
                           style="color: red; font-size: 0.875rem;"></span>
                 </div>
 
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox"
+                               id="popular"
+                               th:field="*{popular}"
+                               style="width: auto; margin-right: 0.5rem;">
+                        <span style="font-weight: bold;">⭐ Mark as Popular</span>
+                    </label>
+                    <small style="margin-left: 1.5rem; display: block; margin-top: 0.25rem;">
+                        Check this box to mark the FAQ as popular. Popular FAQs appear first in lists.
+                    </small>
+                    <span th:if="${#fields.hasErrors('popular')}"
+                          th:errors="*{popular}"
+                          class="error"
+                          style="color: red; font-size: 0.875rem;"></span>
+                </div>
+
                 <div style="display: flex; gap: 1rem; margin-top: 2rem;">
                     <button type="submit" class="btn btn-success"
                             th:text="${faqId != null ? 'Update FAQ' : 'Create FAQ'}">

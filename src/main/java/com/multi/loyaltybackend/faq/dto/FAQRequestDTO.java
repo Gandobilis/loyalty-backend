@@ -30,4 +30,7 @@ public class FAQRequestDTO {
 
     @NotNull(message = "Publish status is required")
     private Boolean publish;
+
+    @NotNull(message = "Popular status is required")
+    private Boolean popular;
 }

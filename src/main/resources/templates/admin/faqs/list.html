@@ -48,6 +48,14 @@
                             <option value="false" th:selected="${filter?.publish == false}">Unpublished</option>
                         </select>
                     </div>
+                    <div>
+                        <label for="popular">Popular:</label>
+                        <select id="popular" name="popular">
+                            <option value="">All</option>
+                            <option value="true" th:selected="${filter?.popular == true}">Popular</option>
+                            <option value="false" th:selected="${filter?.popular == false}">Not Popular</option>
+                        </select>
+                    </div>
                     <div style="display: flex; align-items: flex-end; gap: 0.5rem;">
                         <button type="submit" class="btn btn-primary">Apply Filters</button>
                         <a th:href="@{/admin/faqs}" class="btn" style="background-color: #95a5a6;">Clear</a>
@@ -64,13 +72,14 @@
                             <th>Question</th>
                             <th>Answer Preview</th>
                             <th>Status</th>
+                            <th>Popular</th>
                             <th>Created At</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:if="${faqs.isEmpty()}">
-                            <td colspan="7" style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                            <td colspan="8" style="text-align: center; padding: 2rem; color: #7f8c8d;">
                                 No FAQs found.
                             </td>
                         </tr>
@@ -87,6 +96,7 @@
                                     <input type="hidden" name="category" th:value="${filter?.category}" />
                                     <input type="hidden" name="searchQuery" th:value="${filter?.searchQuery}" />
                                     <input type="hidden" name="publish" th:value="${filter?.publish}" />
+                                    <input type="hidden" name="popular" th:value="${filter?.popular}" />
                                     <input type="hidden" name="page" th:value="${currentPage}" />
                                     <input type="hidden" name="size" th:value="${param.size != null ? param.size[0] : 10}" />
                                     <button type="submit"
@@ -95,6 +105,23 @@
                                             th:text="${faq.publish ? 'Published' : 'Unpublished'}"
                                             title="Click to toggle">
                                         Published
+                                    </button>
+                                </form>
+                            </td>
+                            <td>
+                                <form th:action="@{/admin/faqs/toggle-popular/{id}(id=${faq.id})}" method="post" style="display: inline;">
+                                    <input type="hidden" name="category" th:value="${filter?.category}" />
+                                    <input type="hidden" name="searchQuery" th:value="${filter?.searchQuery}" />
+                                    <input type="hidden" name="publish" th:value="${filter?.publish}" />
+                                    <input type="hidden" name="popular" th:value="${filter?.popular}" />
+                                    <input type="hidden" name="page" th:value="${currentPage}" />
+                                    <input type="hidden" name="size" th:value="${param.size != null ? param.size[0] : 10}" />
+                                    <button type="submit"
+                                            th:class="${faq.popular ? 'btn btn-sm' : 'btn btn-sm'}"
+                                            th:style="${faq.popular ? 'background-color: #f39c12;' : 'background-color: #95a5a6;'}"
+                                            th:text="${faq.popular ? '⭐ Popular' : 'Not Popular'}"
+                                            title="Click to toggle">
+                                        Popular
                                     </button>
                                 </form>
                             </td>
@@ -107,6 +134,7 @@
                                     <input type="hidden" name="category" th:value="${filter?.category}" />
                                     <input type="hidden" name="searchQuery" th:value="${filter?.searchQuery}" />
                                     <input type="hidden" name="publish" th:value="${filter?.publish}" />
+                                    <input type="hidden" name="popular" th:value="${filter?.popular}" />
                                     <input type="hidden" name="page" th:value="${currentPage}" />
                                     <input type="hidden" name="size" th:value="${param.size != null ? param.size[0] : 10}" />
                                     <button type="submit" class="btn btn-sm btn-danger">Delete</button>
@@ -124,12 +152,12 @@
                     </div>
                     <div style="display: flex; gap: 0.5rem;">
                         <a th:if="${currentPage > 0}"
-                           th:href="@{/admin/faqs(page=${currentPage - 1}, size=${param.size != null ? param.size[0] : 10}, category=${filter?.category}, searchQuery=${filter?.searchQuery}, publish=${filter?.publish})}"
+                           th:href="@{/admin/faqs(page=${currentPage - 1}, size=${param.size != null ? param.size[0] : 10}, category=${filter?.category}, searchQuery=${filter?.searchQuery}, publish=${filter?.publish}, popular=${filter?.popular})}"
                            class="btn btn-sm">Previous</a>
                         <span th:if="${currentPage == 0}" class="btn btn-sm" style="opacity: 0.5; cursor: not-allowed;">Previous</span>
 
                         <a th:if="${currentPage < totalPages - 1}"
-                           th:href="@{/admin/faqs(page=${currentPage + 1}, size=${param.size != null ? param.size[0] : 10}, category=${filter?.category}, searchQuery=${filter?.searchQuery}, publish=${filter?.publish})}"
+                           th:href="@{/admin/faqs(page=${currentPage + 1}, size=${param.size != null ? param.size[0] : 10}, category=${filter?.category}, searchQuery=${filter?.searchQuery}, publish=${filter?.publish}, popular=${filter?.popular})}"
                            class="btn btn-sm">Next</a>
                         <span th:if="${currentPage >= totalPages - 1}" class="btn btn-sm" style="opacity: 0.5; cursor: not-allowed;">Next</span>
                     </div>
