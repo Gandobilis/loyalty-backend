@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "support_messages")
@@ -35,20 +37,15 @@ public class SupportMessage {
     @Builder.Default
     private SupportMessageStatus status = SupportMessageStatus.OPEN;
 
-    @Column(columnDefinition = "TEXT")
-    private String response;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "responded_by_user_id")
-    private User respondedBy;
+    @OneToMany(mappedBy = "supportMessage", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<SupportMessageResponse> responses = new ArrayList<>();
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
-
-    private LocalDateTime respondedAt;
 
     @PrePersist
     protected void onCreate() {
@@ -61,3 +58,4 @@ public class SupportMessage {
         updatedAt = LocalDateTime.now();
     }
 }
+

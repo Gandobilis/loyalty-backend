@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Builder
@@ -22,10 +24,8 @@ public class SupportMessageResponse {
     private String subject;
     private String message;
     private SupportMessageStatus status;
-    private String response;
-    private Long respondedByUserId;
-    private String respondedByFullName;
+    @Builder.Default
+    private List<SupportMessageResponseDTO> responses = new ArrayList<>();
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private LocalDateTime respondedAt;
 }

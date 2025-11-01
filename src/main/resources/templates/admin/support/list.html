@@ -230,6 +230,7 @@
                         <th>User</th>
                         <th>Subject</th>
                         <th>Message</th>
+                        <th>Responses</th>
                         <th>Status</th>
                         <th>Created At</th>
                         <th>Actions</th>
@@ -237,7 +238,7 @@
                     </thead>
                     <tbody>
                     <tr th:if="${#lists.isEmpty(messages)}">
-                        <td colspan="7" style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                        <td colspan="8" style="text-align: center; padding: 2rem; color: #7f8c8d;">
                             No support messages found
                         </td>
                     </tr>
@@ -253,6 +254,10 @@
                         </td>
                         <td>
                             <div class="message-preview" th:text="${msg.message}" th:title="${msg.message}"></div>
+                        </td>
+                        <td style="text-align: center;">
+                            <span style="background: #3498db; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.875rem; font-weight: 600;"
+                                  th:text="${#lists.size(msg.responses)}">0</span>
                         </td>
                         <td>
                             <span class="status-badge"
@@ -318,7 +323,7 @@
 </div>
 
 <!-- Respond Form Modal -->
-<div class="overlay" id="overlay" onclick="closeRespondForm()"></div>
+<div class="overlay" id="overlay" onclick="closeAllModals()"></div>
 <div class="respond-form" id="respondForm">
     <h3 id="modalTitle">Respond to Message</h3>
     <form id="responseForm" method="post">
@@ -388,6 +393,30 @@
         const message = messages.find(m => m.id === id);
         if (!message) return;
 
+        let responsesHtml = '';
+        if (message.responses && message.responses.length > 0) {
+            responsesHtml = `
+                <hr style="margin: 1rem 0;">
+                <p><strong>Responses (${message.responses.length}):</strong></p>
+            `;
+            message.responses.forEach((resp, index) => {
+                responsesHtml += `
+                    <div style="background: #e8f4f8; padding: 1rem; border-radius: 4px; margin: 0.5rem 0; border-left: 3px solid #3498db;">
+                        <div style="font-size: 0.875rem; color: #7f8c8d; margin-bottom: 0.5rem;">
+                            <strong>#${index + 1}</strong> by ${resp.respondedByFullName} -
+                            ${new Date(resp.createdAt).toLocaleString()}
+                        </div>
+                        <div>${resp.response}</div>
+                    </div>
+                `;
+            });
+        } else {
+            responsesHtml = `
+                <hr style="margin: 1rem 0;">
+                <p style="color: #7f8c8d;"><em>No responses yet</em></p>
+            `;
+        }
+
         const details = `
             <p><strong>ID:</strong> ${message.id}</p>
             <p><strong>User:</strong> ${message.userFullName} (${message.userEmail})</p>
@@ -399,15 +428,7 @@
             </div>
             <p><strong>Status:</strong> ${message.status}</p>
             <p><strong>Created:</strong> ${new Date(message.createdAt).toLocaleString()}</p>
-            ${message.response ? `
-                <hr style="margin: 1rem 0;">
-                <p><strong>Response:</strong></p>
-                <div style="background: #e8f4f8; padding: 1rem; border-radius: 4px; margin: 0.5rem 0;">
-                    ${message.response}
-                </div>
-                <p><strong>Responded By:</strong> ${message.respondedByFullName || 'N/A'}</p>
-                <p><strong>Responded At:</strong> ${message.respondedAt ? new Date(message.respondedAt).toLocaleString() : 'N/A'}</p>
-            ` : ''}
+            ${responsesHtml}
         `;
 
         document.getElementById('messageDetails').innerHTML = details;
@@ -419,6 +440,18 @@
         document.getElementById('overlay').classList.remove('active');
         document.getElementById('viewMessageModal').classList.remove('active');
     }
+
+    function closeAllModals() {
+        closeRespondForm();
+        closeViewMessage();
+    }
+
+    // Close modals on ESC key press
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' || event.key === 'Esc') {
+            closeAllModals();
+        }
+    });
     /*]]>*/
 </script>
 </body>

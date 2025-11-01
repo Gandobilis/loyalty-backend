@@ -2,7 +2,6 @@ package com.multi.loyaltybackend.dto;
 
 import com.multi.loyaltybackend.model.SupportMessageStatus;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,6 +16,6 @@ public class RespondToSupportMessageRequest {
     @Size(max = 5000, message = "Response must not exceed 5000 characters")
     private String response;
 
-    @NotNull(message = "Status is required")
+    // Optional - update status when responding
     private SupportMessageStatus status;
 }

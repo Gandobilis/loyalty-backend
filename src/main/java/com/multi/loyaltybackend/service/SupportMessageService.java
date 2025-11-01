@@ -3,11 +3,13 @@ package com.multi.loyaltybackend.service;
 import com.multi.loyaltybackend.dto.CreateSupportMessageRequest;
 import com.multi.loyaltybackend.dto.RespondToSupportMessageRequest;
 import com.multi.loyaltybackend.dto.SupportMessageResponse;
+import com.multi.loyaltybackend.dto.SupportMessageResponseDTO;
 import com.multi.loyaltybackend.exception.ResourceNotFoundException;
 import com.multi.loyaltybackend.model.SupportMessage;
 import com.multi.loyaltybackend.model.SupportMessageStatus;
 import com.multi.loyaltybackend.model.User;
 import com.multi.loyaltybackend.repository.SupportMessageRepository;
+import com.multi.loyaltybackend.repository.SupportMessageResponseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,13 +18,14 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class SupportMessageService {
 
     private final SupportMessageRepository supportMessageRepository;
+    private final SupportMessageResponseRepository supportMessageResponseRepository;
 
     @Transactional
     public SupportMessageResponse createMessage(CreateSupportMessageRequest request, User user) {
@@ -76,13 +79,27 @@ public class SupportMessageService {
         SupportMessage message = supportMessageRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("SupportMessage", "id", id));
 
-        message.setResponse(request.getResponse());
-        message.setStatus(request.getStatus());
-        message.setRespondedBy(admin);
-        message.setRespondedAt(LocalDateTime.now());
+        // Create a new response
+        com.multi.loyaltybackend.model.SupportMessageResponse response =
+            com.multi.loyaltybackend.model.SupportMessageResponse.builder()
+                .supportMessage(message)
+                .respondedBy(admin)
+                .response(request.getResponse())
+                .build();
 
-        SupportMessage updatedMessage = supportMessageRepository.save(message);
-        return mapToResponse(updatedMessage);
+        supportMessageResponseRepository.save(response);
+
+        // Update status if provided
+        if (request.getStatus() != null) {
+            message.setStatus(request.getStatus());
+            supportMessageRepository.save(message);
+        }
+
+        // Refresh message to get updated responses
+        message = supportMessageRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("SupportMessage", "id", id));
+
+        return mapToResponse(message);
     }
 
     @Transactional
@@ -102,7 +119,18 @@ public class SupportMessageService {
     }
 
     private SupportMessageResponse mapToResponse(SupportMessage message) {
-        SupportMessageResponse.SupportMessageResponseBuilder builder = SupportMessageResponse.builder()
+        // Map responses
+        var responseDTOs = message.getResponses().stream()
+                .map(r -> SupportMessageResponseDTO.builder()
+                        .id(r.getId())
+                        .respondedByUserId(r.getRespondedBy().getId())
+                        .respondedByFullName(r.getRespondedBy().getFullName())
+                        .response(r.getResponse())
+                        .createdAt(r.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+
+        return SupportMessageResponse.builder()
                 .id(message.getId())
                 .userId(message.getUser().getId())
                 .userFullName(message.getUser().getFullName())
@@ -111,17 +139,10 @@ public class SupportMessageService {
                 .subject(message.getSubject())
                 .message(message.getMessage())
                 .status(message.getStatus())
-                .response(message.getResponse())
+                .responses(responseDTOs)
                 .createdAt(message.getCreatedAt())
                 .updatedAt(message.getUpdatedAt())
-                .respondedAt(message.getRespondedAt());
-
-        if (message.getRespondedBy() != null) {
-            builder.respondedByUserId(message.getRespondedBy().getId())
-                    .respondedByFullName(message.getRespondedBy().getFullName());
-        }
-
-        return builder.build();
+                .build();
     }
 
     private boolean isAdmin(User user) {
