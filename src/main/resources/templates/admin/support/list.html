@@ -268,12 +268,14 @@
                             <div class="action-buttons">
                                 <button type="button" class="btn-small"
                                         style="background: #3498db;"
-                                        th:onclick="'showRespondForm(' + ${msg.id} + ', \'' + ${msg.userFullName} + '\', \'' + ${msg.subject} + '\')'">
+                                        th:attr="data-msg-id=${msg.id}, data-user-name=${msg.userFullName}, data-subject=${msg.subject}"
+                                        onclick="showRespondFormFromData(this)">
                                     Respond
                                 </button>
                                 <button type="button" class="btn-small"
                                         style="background: #27ae60;"
-                                        th:onclick="'viewMessage(' + ${msg.id} + ')'">
+                                        th:attr="data-msg-id=${msg.id}"
+                                        onclick="viewMessageFromData(this)">
                                     View Details
                                 </button>
                             </div>
@@ -355,6 +357,19 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     const messages = /*[[${messages}]]*/ [];
+
+    // Wrapper functions that read from data attributes
+    function showRespondFormFromData(button) {
+        const id = button.getAttribute('data-msg-id');
+        const userName = button.getAttribute('data-user-name');
+        const subject = button.getAttribute('data-subject');
+        showRespondForm(id, userName, subject);
+    }
+
+    function viewMessageFromData(button) {
+        const id = parseInt(button.getAttribute('data-msg-id'));
+        viewMessage(id);
+    }
 
     function showRespondForm(id, userName, subject) {
         document.getElementById('modalTitle').textContent = 'Respond to: ' + subject;
