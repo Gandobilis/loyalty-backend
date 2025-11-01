@@ -17,7 +17,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "faqs", indexes = {
         @Index(name = "idx_category", columnList = "category"),
-        @Index(name = "idx_publish", columnList = "publish")
+        @Index(name = "idx_publish", columnList = "publish"),
+        @Index(name = "idx_popular", columnList = "popular")
 })
 @EntityListeners(AuditingEntityListener.class)
 @Getter
@@ -50,6 +51,11 @@ public class FAQ {
     @Builder.Default
     private Boolean publish = false;
 
+    @NotNull(message = "Popular status is required")
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean popular = false;
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -62,6 +68,9 @@ public class FAQ {
     protected void onCreate() {
         if (publish == null) {
             publish = false;
+        }
+        if (popular == null) {
+            popular = false;
         }
     }
 }

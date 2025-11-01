@@ -39,6 +39,7 @@ public class FAQService {
                 .question(requestDTO.getQuestion())
                 .answer(requestDTO.getAnswer())
                 .publish(requestDTO.getPublish())
+                .popular(requestDTO.getPopular())
                 .build();
 
         FAQ savedFAQ = faqRepository.save(faq);
@@ -64,6 +65,7 @@ public class FAQService {
         faq.setQuestion(requestDTO.getQuestion());
         faq.setAnswer(requestDTO.getAnswer());
         faq.setPublish(requestDTO.getPublish());
+        faq.setPopular(requestDTO.getPopular());
 
         FAQ updatedFAQ = faqRepository.save(faq);
         log.info("FAQ updated successfully with ID: {}", updatedFAQ.getId());
@@ -214,6 +216,27 @@ public class FAQService {
     }
 
     /**
+     * Toggle popular status (Admin)
+     */
+    @Transactional
+    public FAQResponseDTO togglePopularStatus(Long id) {
+        log.info("Toggling popular status for FAQ with ID: {}", id);
+
+        FAQ faq = faqRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.error("FAQ not found with ID: {}", id);
+                    return new RuntimeException("FAQ not found with ID: " + id);
+                });
+
+        faq.setPopular(!faq.getPopular());
+        FAQ updatedFAQ = faqRepository.save(faq);
+
+        log.info("FAQ popular status toggled to: {} for ID: {}", updatedFAQ.getPopular(), id);
+
+        return mapToResponseDTO(updatedFAQ);
+    }
+
+    /**
      * Map FAQ entity to response DTO
      */
     private FAQResponseDTO mapToResponseDTO(FAQ faq) {
@@ -223,6 +246,7 @@ public class FAQService {
                 .question(faq.getQuestion())
                 .answer(faq.getAnswer())
                 .publish(faq.getPublish())
+                .popular(faq.getPopular())
                 .createdAt(faq.getCreatedAt())
                 .updatedAt(faq.getUpdatedAt())
                 .build();

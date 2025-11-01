@@ -21,6 +21,7 @@ public class FAQResponseDTO {
     private String question;
     private String answer;
     private Boolean publish;
+    private Boolean popular;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

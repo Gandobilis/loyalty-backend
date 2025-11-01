@@ -143,11 +143,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allow your frontend URL
-        configuration.setAllowedOrigins(List.of(frontendUrl, "*"));
+        // Use allowedOriginPatterns instead of allowedOrigins when allowCredentials is true
+        // This allows the wildcard pattern while supporting credentials
+        configuration.setAllowedOriginPatterns(List.of(frontendUrl, "*"));
 
         // Or for multiple origins:
-        // configuration.setAllowedOrigins(Arrays.asList(frontendUrl, "http://localhost:3000"));
+        // configuration.setAllowedOriginPatterns(Arrays.asList(frontendUrl, "http://localhost:3000", "http://localhost:*"));
 
         // Allow all HTTP methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
