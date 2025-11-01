@@ -47,7 +47,7 @@ public class SupportMessageService {
     @Transactional(readOnly = true)
     public SupportMessageResponse getMessageById(Long id, User user) {
         SupportMessage message = supportMessageRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Support message not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("SupportMessage", "id", id));
 
         // Check if user has access to this message (either owner or admin)
         if (!message.getUser().getId().equals(user.getId()) && !isAdmin(user)) {
@@ -74,7 +74,7 @@ public class SupportMessageService {
     @Transactional
     public SupportMessageResponse respondToMessage(Long id, RespondToSupportMessageRequest request, User admin) {
         SupportMessage message = supportMessageRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Support message not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("SupportMessage", "id", id));
 
         message.setResponse(request.getResponse());
         message.setStatus(request.getStatus());
@@ -88,7 +88,7 @@ public class SupportMessageService {
     @Transactional
     public SupportMessageResponse updateMessageStatus(Long id, SupportMessageStatus status, User admin) {
         SupportMessage message = supportMessageRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Support message not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("SupportMessage", "id", id));
 
         message.setStatus(status);
 
